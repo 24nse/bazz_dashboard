@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../../data/dummy_data/dummy_orders.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../data/providers/order_provider.dart';
 import '../../../data/models/order.dart';
 
-class OrdersView extends StatelessWidget {
+class OrdersView extends ConsumerWidget {
   const OrdersView({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -38,53 +39,57 @@ class OrdersView extends StatelessWidget {
           ),
           const Divider(height: 1, color: Color(0xFFE2E8F0)),
           Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SingleChildScrollView(
-                child: DataTable(
-                  headingTextStyle: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF475569),
-                  ),
-                  dataTextStyle: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 14,
-                    color: Color(0xFF131B2E),
-                  ),
-                  columns: const [
-                    DataColumn(label: Text('Order ID')),
-                    DataColumn(label: Text('Customer')),
-                    DataColumn(label: Text('Date')),
-                    DataColumn(label: Text('Total')),
-                    DataColumn(label: Text('Status')),
-                    DataColumn(label: Text('Actions')),
-                  ],
-                  rows: dummyOrders.map((order) {
-                    return DataRow(
-                      cells: [
-                        DataCell(
-                          Text(
-                            order.id,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+            child: ref.watch(ordersProvider).when(
+              data: (orders) => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SingleChildScrollView(
+                  child: DataTable(
+                    headingTextStyle: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF475569),
+                    ),
+                    dataTextStyle: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      color: Color(0xFF131B2E),
+                    ),
+                    columns: const [
+                      DataColumn(label: Text('Order ID')),
+                      DataColumn(label: Text('Customer')),
+                      DataColumn(label: Text('Date')),
+                      DataColumn(label: Text('Total')),
+                      DataColumn(label: Text('Status')),
+                      DataColumn(label: Text('Actions')),
+                    ],
+                    rows: orders.map((order) {
+                      return DataRow(
+                        cells: [
+                          DataCell(
+                            Text(
+                              order.id,
+                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            ),
                           ),
-                        ),
-                        DataCell(Text(order.customerName)),
-                        DataCell(Text('${order.date.month}/${order.date.day}/${order.date.year}')),
-                        DataCell(Text('\$${order.totalAmount.toStringAsFixed(2)}')),
-                        DataCell(_StatusBadge(status: order.status)),
-                        DataCell(
-                          IconButton(
-                            icon: const Icon(Icons.more_vert, color: Color(0xFF94A3B8)),
-                            onPressed: () {},
+                          DataCell(Text(order.customerName)),
+                          DataCell(Text('${order.date.month}/${order.date.day}/${order.date.year}')),
+                          DataCell(Text('\$${order.totalAmount.toStringAsFixed(2)}')),
+                          DataCell(_StatusBadge(status: order.status)),
+                          DataCell(
+                            IconButton(
+                              icon: const Icon(Icons.more_vert, color: Color(0xFF94A3B8)),
+                              onPressed: () {},
+                            ),
                           ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
+                        ],
+                      );
+                    }).toList(),
+                  ),
                 ),
               ),
+              loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF4F46E5))),
+              error: (err, stack) => Center(child: Text('Error: $err')),
             ),
           ),
         ],

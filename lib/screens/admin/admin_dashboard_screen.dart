@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../common/widgets/layouts/sidebar.dart';
 import '../../common/widgets/layouts/appbar.dart';
 import '../../common/widgets/dashboard/metric_card.dart';
@@ -8,38 +9,36 @@ import 'views/products_view.dart';
 import 'views/orders_view.dart';
 import 'views/customers_view.dart';
 import 'views/settings_view.dart';
+import 'views/promotions_view.dart';
+import 'views/banners_view.dart';
+import 'views/brands_view.dart';
+import 'views/user_roles_view.dart';
 
-enum AdminView { dashboard, products, orders, customers, promotions, settings }
+enum AdminView { dashboard, products, orders, customers, promotions, banners, brands, userRoles, settings }
 
-class AdminDashboardScreen extends StatefulWidget {
+final adminViewProvider = StateProvider<AdminView>((ref) => AdminView.dashboard);
+
+class AdminDashboardScreen extends ConsumerWidget {
   const AdminDashboardScreen({super.key});
 
   @override
-  State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentView = ref.watch(adminViewProvider);
 
-class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
-  AdminView _currentView = AdminView.dashboard;
-
-  void _onViewSelected(AdminView view) {
-    setState(() {
-      _currentView = view;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
+    void onViewSelected(AdminView view) {
+      ref.read(adminViewProvider.notifier).state = view;
+    }
     final isDesktop = MediaQuery.of(context).size.width >= 1024;
     final isTablet = MediaQuery.of(context).size.width >= 768 && MediaQuery.of(context).size.width < 1024;
     final isMobile = MediaQuery.of(context).size.width < 768;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      drawer: isDesktop ? null : Drawer(child: Sidebar(currentView: _currentView, onSelected: _onViewSelected)),
+      drawer: isDesktop ? null : Drawer(child: Sidebar(currentView: currentView, onSelected: onViewSelected)),
       body: Row(
         children: [
           // Sidebar
-          if (isDesktop) Sidebar(currentView: _currentView, onSelected: _onViewSelected),
+          if (isDesktop) Sidebar(currentView: currentView, onSelected: onViewSelected),
           
           // Main Content
           Expanded(
@@ -55,7 +54,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _getAppBarTitle(_currentView),
+                          _getAppBarTitle(currentView),
                           style: const TextStyle(
                             fontFamily: 'Plus Jakarta Sans',
                             fontSize: 26,
@@ -66,7 +65,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         SizedBox(height: isMobile ? 16 : 24),
                         // Content Dashboard Widgets
                         Expanded(
-                          child: _buildCurrentViewContent(_currentView, isDesktop, isTablet, isMobile),
+                          child: _buildCurrentViewContent(currentView, isDesktop, isTablet, isMobile),
                         ),
                       ],
                     ),
@@ -87,6 +86,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       case AdminView.orders: return 'Orders & Shipping';
       case AdminView.customers: return 'Customers';
       case AdminView.promotions: return 'Promotions & Coupons';
+      case AdminView.banners: return 'Banners & Media';
+      case AdminView.brands: return 'Brands Management';
+      case AdminView.userRoles: return 'User Roles & Permissions';
       case AdminView.settings: return 'Store Settings';
     }
   }
@@ -103,6 +105,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
     if (view == AdminView.settings) {
       return const SettingsView();
+    }
+    if (view == AdminView.promotions) {
+      return const PromotionsView();
+    }
+    if (view == AdminView.banners) {
+      return const BannersView();
+    }
+    if (view == AdminView.brands) {
+      return const BrandsView();
+    }
+    if (view == AdminView.userRoles) {
+      return const UserRolesView();
     }
     if (view != AdminView.dashboard) {
       return Center(

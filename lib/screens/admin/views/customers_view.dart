@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../../data/dummy_data/dummy_customers.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../data/providers/customer_provider.dart';
 import '../../../data/models/customer.dart';
 
-class CustomersView extends StatelessWidget {
+class CustomersView extends ConsumerWidget {
   const CustomersView({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -49,12 +50,16 @@ class CustomersView extends StatelessWidget {
         const SizedBox(height: 24),
         // Customers List
         Expanded(
-          child: ListView.separated(
-            itemCount: dummyCustomers.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 16),
-            itemBuilder: (context, index) {
-              return _CustomerCard(customer: dummyCustomers[index]);
-            },
+          child: ref.watch(customersProvider).when(
+            data: (customers) => ListView.separated(
+              itemCount: customers.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 16),
+              itemBuilder: (context, index) {
+                return _CustomerCard(customer: customers[index]);
+              },
+            ),
+            loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF4F46E5))),
+            error: (err, stack) => Center(child: Text('Error: $err')),
           ),
         ),
       ],

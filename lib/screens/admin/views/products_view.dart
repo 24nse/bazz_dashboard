@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../../data/dummy_data/dummy_products.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../data/providers/product_provider.dart';
 import '../../../data/models/product.dart';
 
-class ProductsView extends StatelessWidget {
+class ProductsView extends ConsumerWidget {
   const ProductsView({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isMobile = MediaQuery.of(context).size.width < 768;
 
     return Column(
@@ -79,30 +80,34 @@ class ProductsView extends StatelessWidget {
         const SizedBox(height: 24),
         // Product Grid
         Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              int crossAxisCount = 1;
-              if (constraints.maxWidth > 1200) {
-                crossAxisCount = 4;
-              } else if (constraints.maxWidth > 800) {
-                crossAxisCount = 3;
-              } else if (constraints.maxWidth > 500) {
-                crossAxisCount = 2;
-              }
+          child: ref.watch(productsProvider).when(
+            data: (products) => LayoutBuilder(
+              builder: (context, constraints) {
+                int crossAxisCount = 1;
+                if (constraints.maxWidth > 1200) {
+                  crossAxisCount = 4;
+                } else if (constraints.maxWidth > 800) {
+                  crossAxisCount = 3;
+                } else if (constraints.maxWidth > 500) {
+                  crossAxisCount = 2;
+                }
 
-              return GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: 24,
-                  mainAxisSpacing: 24,
-                  childAspectRatio: 0.8,
-                ),
-                itemCount: dummyProducts.length,
-                itemBuilder: (context, index) {
-                  return _ProductCard(product: dummyProducts[index]);
-                },
-              );
-            },
+                return GridView.builder(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: 24,
+                    mainAxisSpacing: 24,
+                    childAspectRatio: 0.8,
+                  ),
+                  itemCount: products.length,
+                  itemBuilder: (context, index) {
+                    return _ProductCard(product: products[index]);
+                  },
+                );
+              },
+            ),
+            loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF4F46E5))),
+            error: (err, stack) => Center(child: Text('Error: $err')),
           ),
         ),
       ],
