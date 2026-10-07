@@ -42,7 +42,7 @@ class NotificationsView extends StatelessWidget {
         Expanded(
           child: ListView.separated(
             itemCount: _dummyCampaigns.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 16),
+            separatorBuilder: (_, _) => const SizedBox(height: 16),
             itemBuilder: (context, index) {
               final c = _dummyCampaigns[index];
               return _CampaignCard(
@@ -103,7 +103,7 @@ class _CampaignCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withOpacity(0.06),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.06),
             offset: const Offset(0, 4),
             blurRadius: 20,
             spreadRadius: -2,
@@ -118,7 +118,7 @@ class _CampaignCard extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: const Color(0xFF4F46E5).withOpacity(0.08),
+              color: const Color(0xFF4F46E5).withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.notifications_active_outlined, color: Color(0xFF4F46E5), size: 22),
@@ -146,7 +146,7 @@ class _CampaignCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
+                        color: statusColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(9999),
                       ),
                       child: Text(

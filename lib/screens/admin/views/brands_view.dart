@@ -118,7 +118,7 @@ class _BrandCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withOpacity(0.06),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.06),
             offset: const Offset(0, 4),
             blurRadius: 20,
             spreadRadius: -2,
@@ -133,7 +133,7 @@ class _BrandCard extends StatelessWidget {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: const Color(0xFF4F46E5).withOpacity(0.08),
+              color: const Color(0xFF4F46E5).withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
@@ -172,7 +172,7 @@ class _BrandCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: const Color(0xFFF59E0B).withOpacity(0.1),
+                color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(9999),
               ),
               child: const Text(

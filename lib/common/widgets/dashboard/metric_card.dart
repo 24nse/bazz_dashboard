@@ -3,107 +3,149 @@ import 'package:flutter/material.dart';
 class MetricCard extends StatelessWidget {
   final String title;
   final String value;
-  final String change;
-  final bool isPositive;
+  final String unit;
   final IconData icon;
+  final Color iconBgColor;
+  final Color iconColor;
+  final String badgeText;
+  final Color badgeBgColor;
+  final Color badgeTextColor;
+  final IconData? badgeIcon;
+  final String subtitle;
+  final Color? valueColor;
+  final Color? borderColor;
+  final Color? titleColor;
 
   const MetricCard({
     super.key,
     required this.title,
     required this.value,
-    required this.change,
-    required this.isPositive,
+    required this.unit,
     required this.icon,
+    required this.iconBgColor,
+    required this.iconColor,
+    required this.badgeText,
+    required this.badgeBgColor,
+    required this.badgeTextColor,
+    required this.subtitle,
+    this.badgeIcon,
+    this.valueColor,
+    this.borderColor,
+    this.titleColor,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor ?? const Color(0xFFE2E7FF)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withOpacity(0.06),
-            offset: const Offset(0, 4),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.06),
             blurRadius: 20,
-            spreadRadius: -2,
+            offset: const Offset(0, 4),
           )
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Inter',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF475569),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: titleColor ?? const Color(0xFF777587),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.all(8),
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(8),
+                  color: iconBgColor,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, size: 20, color: const Color(0xFF0F172A)),
+                child: Icon(icon, color: iconColor, size: 22),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            value,
-            style: const TextStyle(
-              fontFamily: 'Plus Jakarta Sans',
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF131B2E),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
+          const SizedBox(height: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isPositive ? const Color(0xFF10B981).withOpacity(0.1) : const Color(0xFFEF4444).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(9999),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      isPositive ? Icons.arrow_upward : Icons.arrow_downward,
-                      size: 14,
-                      color: isPositive ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: valueColor ?? const Color(0xFF131B2E),
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      change,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isPositive ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-                      ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    unit,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: titleColor ?? const Color(0xFF777587),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              const Text(
-                'vs last month',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 12,
-                  color: Color(0xFF94A3B8),
-                ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: badgeBgColor,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      children: [
+                        if (badgeIcon != null) ...[
+                          Icon(badgeIcon, color: badgeTextColor, size: 14),
+                          const SizedBox(width: 2),
+                        ],
+                        Text(
+                          badgeText,
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: badgeTextColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 11,
+                        color: Color(0xFF777587),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

@@ -59,7 +59,7 @@ class ReportsView extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF0F172A).withOpacity(0.06),
+                  color: const Color(0xFF0F172A).withValues(alpha: 0.06),
                   offset: const Offset(0, 4),
                   blurRadius: 20,
                   spreadRadius: -2,
@@ -101,7 +101,7 @@ class ReportsView extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: (isPositive ? const Color(0xFF10B981) : const Color(0xFFEF4444)).withOpacity(0.1),
+                              color: (isPositive ? const Color(0xFF10B981) : const Color(0xFFEF4444)).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(9999),
                             ),
                             child: Text(
@@ -151,7 +151,7 @@ class _ReportChartCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withOpacity(0.06),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.06),
             offset: const Offset(0, 4),
             blurRadius: 20,
             spreadRadius: -2,

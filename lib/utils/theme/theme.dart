@@ -76,11 +76,11 @@ class AppTheme {
           borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 1.5),
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: const Color(0xFFFFFFFF),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         elevation: 1,
-        shadowColor: const Color(0xFF0F172A).withOpacity(0.06),
+        shadowColor: const Color(0xFF0F172A).withValues(alpha: 0.06),
       ),
     );
   }

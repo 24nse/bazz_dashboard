@@ -35,9 +35,11 @@ class AdminDashboardScreen extends ConsumerWidget {
     final isTablet = MediaQuery.of(context).size.width >= 768 && MediaQuery.of(context).size.width < 1024;
     final isMobile = MediaQuery.of(context).size.width < 768;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      drawer: isDesktop ? null : Drawer(child: Sidebar(currentView: currentView, onSelected: onViewSelected)),
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        drawer: isDesktop ? null : Drawer(child: Sidebar(currentView: currentView, onSelected: onViewSelected)),
       body: Row(
         children: [
           // Sidebar
@@ -56,16 +58,6 @@ class AdminDashboardScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          _getAppBarTitle(currentView),
-                          style: const TextStyle(
-                            fontFamily: 'Plus Jakarta Sans',
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF131B2E),
-                          ),
-                        ),
-                        SizedBox(height: isMobile ? 16 : 24),
                         // Content Dashboard Widgets
                         Expanded(
                           child: _buildCurrentViewContent(currentView, isDesktop, isTablet, isMobile),
@@ -155,47 +147,68 @@ class AdminDashboardScreen extends ConsumerWidget {
             builder: (context, constraints) {
               final double cardWidth = isMobile 
                 ? constraints.maxWidth 
-                : (isTablet ? (constraints.maxWidth - 24) / 2 : (constraints.maxWidth - 72) / 4);
+                : (isTablet ? (constraints.maxWidth - 24) / 2 : (constraints.maxWidth - (24 * 4)) / 5);
               
               return Wrap(
                 spacing: 24,
                 runSpacing: 24,
                 children: [
-                  SizedBox(width: cardWidth, child: const MetricCard(title: 'Total Revenue', value: '\$124,563.00', change: '14.5%', isPositive: true, icon: Icons.attach_money)),
-                  SizedBox(width: cardWidth, child: const MetricCard(title: 'Total Orders', value: '1,245', change: '8.2%', isPositive: true, icon: Icons.shopping_bag_outlined)),
-                  SizedBox(width: cardWidth, child: const MetricCard(title: 'Active Customers', value: '892', change: '2.4%', isPositive: false, icon: Icons.people_outline)),
-                  SizedBox(width: cardWidth, child: const MetricCard(title: 'Conversion Rate', value: '3.6%', change: '1.2%', isPositive: true, icon: Icons.trending_up)),
+                  SizedBox(width: cardWidth, child: MetricCard(
+                    title: 'إجمالي المبيعات', value: '148,920', unit: 'ر.س', icon: Icons.payments,
+                    iconBgColor: const Color(0xFFE2DFFF).withValues(alpha: 0.6), iconColor: const Color(0xFF3525CD),
+                    badgeText: '+18.4%', badgeBgColor: const Color(0xFFECFDF5), badgeTextColor: const Color(0xFF059669), badgeIcon: Icons.arrow_upward,
+                    subtitle: 'مقارنة بالشهر الماضي',
+                  )),
+                  SizedBox(width: cardWidth, child: const MetricCard(
+                    title: 'إجمالي الطلبات', value: '1,420', unit: 'طلب', icon: Icons.shopping_basket,
+                    iconBgColor: Color(0xFFEAEDFF), iconColor: Color(0xFF4D44E3),
+                    badgeText: '+12.2%', badgeBgColor: Color(0xFFECFDF5), badgeTextColor: Color(0xFF059669), badgeIcon: Icons.arrow_upward,
+                    subtitle: 'خلال هذا الأسبوع',
+                  )),
+                  SizedBox(width: cardWidth, child: MetricCard(
+                    title: 'متوسط قيمة الطلب', value: '385', unit: 'ر.س', icon: Icons.receipt_long,
+                    iconBgColor: const Color(0xFFDAE2FD).withValues(alpha: 0.7), iconColor: const Color(0xFF464555),
+                    badgeText: '+5.1%', badgeBgColor: const Color(0xFFECFDF5), badgeTextColor: const Color(0xFF059669), badgeIcon: Icons.arrow_upward,
+                    subtitle: 'نمو إيجابي مستقر',
+                  )),
+                  SizedBox(width: cardWidth, child: MetricCard(
+                    title: 'العملاء النشطون', value: '892', unit: 'عميل', icon: Icons.person_add,
+                    iconBgColor: const Color(0xFFE2E7FF), iconColor: const Color(0xFF3525CD),
+                    badgeText: '+24', badgeBgColor: const Color(0xFFE2DFFF).withValues(alpha: 0.4), badgeTextColor: const Color(0xFF3525CD),
+                    subtitle: 'عميل جديد اليوم',
+                  )),
+                  SizedBox(width: cardWidth, child: MetricCard(
+                    title: 'تنبيه المخزون المنخفض', value: '6', unit: 'منتجات', icon: Icons.warning,
+                    titleColor: const Color(0xFF855300), valueColor: const Color(0xFF855300), borderColor: const Color(0xFFFEA619).withValues(alpha: 0.4),
+                    iconBgColor: const Color(0xFFFFDDB8).withValues(alpha: 0.5), iconColor: const Color(0xFF855300),
+                    badgeText: 'إجراء مطلوب', badgeBgColor: const Color(0xFFFFDDB8), badgeTextColor: const Color(0xFF684000),
+                    subtitle: 'تحتاج لإعادة توريد',
+                  )),
                 ],
               );
             }
           ),
           const SizedBox(height: 32),
-          if (isDesktop)
+          if (isDesktop) ...[
             const Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  flex: 2,
-                  child: ChartCard(), 
-                ),
+                Expanded(flex: 2, child: RevenueChartCard()),
                 SizedBox(width: 24),
-                Expanded(
-                  flex: 1,
-                  child: RecentOrdersCard(), 
-                ),
-              ],
-            )
-          else
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ChartCard(),
-                SizedBox(height: 24),
-                RecentOrdersCard(),
+                Expanded(flex: 1, child: CategorySalesCard()),
               ],
             ),
+            const SizedBox(height: 24),
+            const RecentOrdersCard(),
+          ] else ...[
+            const RevenueChartCard(),
+            const SizedBox(height: 24),
+            const CategorySalesCard(),
+            const SizedBox(height: 24),
+            const RecentOrdersCard(),
+          ],
         ],
       ),
-    );
+    ));
   }
 }
