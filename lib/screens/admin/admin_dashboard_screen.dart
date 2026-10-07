@@ -13,8 +13,11 @@ import 'views/promotions_view.dart';
 import 'views/banners_view.dart';
 import 'views/brands_view.dart';
 import 'views/user_roles_view.dart';
+import 'views/categories_view.dart';
+import 'views/notifications_view.dart';
+import 'views/reports_view.dart';
 
-enum AdminView { dashboard, products, orders, customers, promotions, banners, brands, userRoles, settings }
+enum AdminView { dashboard, products, categories, orders, customers, promotions, banners, brands, notifications, reports, userRoles, settings }
 
 final adminViewProvider = StateProvider<AdminView>((ref) => AdminView.dashboard);
 
@@ -83,11 +86,14 @@ class AdminDashboardScreen extends ConsumerWidget {
     switch (view) {
       case AdminView.dashboard: return 'Overview';
       case AdminView.products: return 'Products Management';
+      case AdminView.categories: return 'Categories & Classifications';
       case AdminView.orders: return 'Orders & Shipping';
       case AdminView.customers: return 'Customers';
       case AdminView.promotions: return 'Promotions & Coupons';
       case AdminView.banners: return 'Banners & Media';
       case AdminView.brands: return 'Brands Management';
+      case AdminView.notifications: return 'Notifications & FCM';
+      case AdminView.reports: return 'Reports & Analytics';
       case AdminView.userRoles: return 'User Roles & Permissions';
       case AdminView.settings: return 'Store Settings';
     }
@@ -96,6 +102,9 @@ class AdminDashboardScreen extends ConsumerWidget {
   Widget _buildCurrentViewContent(AdminView view, bool isDesktop, bool isTablet, bool isMobile) {
     if (view == AdminView.products) {
       return const ProductsView();
+    }
+    if (view == AdminView.categories) {
+      return const CategoriesView();
     }
     if (view == AdminView.orders) {
       return const OrdersView();
@@ -117,6 +126,12 @@ class AdminDashboardScreen extends ConsumerWidget {
     }
     if (view == AdminView.userRoles) {
       return const UserRolesView();
+    }
+    if (view == AdminView.notifications) {
+      return const NotificationsView();
+    }
+    if (view == AdminView.reports) {
+      return const ReportsView();
     }
     if (view != AdminView.dashboard) {
       return Center(
