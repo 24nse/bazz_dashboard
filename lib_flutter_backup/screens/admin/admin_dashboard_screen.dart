@@ -5,6 +5,8 @@ import '../../common/widgets/layouts/appbar.dart';
 import '../../common/widgets/dashboard/metric_card.dart';
 import '../../common/widgets/dashboard/chart_card.dart';
 import '../../common/widgets/dashboard/recent_orders_card.dart';
+import '../../common/widgets/dashboard/top_products_card.dart';
+import '../../common/widgets/dashboard/quick_actions_card.dart';
 import 'views/products_view.dart';
 import 'views/orders_view.dart';
 import 'views/customers_view.dart';
@@ -35,22 +37,20 @@ class AdminDashboardScreen extends ConsumerWidget {
     final isTablet = MediaQuery.of(context).size.width >= 768 && MediaQuery.of(context).size.width < 1024;
     final isMobile = MediaQuery.of(context).size.width < 768;
 
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
+    return Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
-        drawer: isDesktop ? null : Drawer(child: Sidebar(currentView: currentView, onSelected: onViewSelected)),
+        // drawer: isDesktop ? null : Drawer(child: Sidebar(currentView: currentView, onSelected: onViewSelected)),
       body: Row(
         children: [
-          // Sidebar
           if (isDesktop) Sidebar(currentView: currentView, onSelected: onViewSelected),
-          
+
+
           // Main Content
           Expanded(
             child: Column(
               children: [
                 // Top App Bar
-                DashboardAppBar(isDesktop: isDesktop, isTablet: isTablet, isMobile: isMobile),
+                // DashboardAppBar(isDesktop: isDesktop, isTablet: isTablet, isMobile: isMobile, title: _getAppBarTitle(currentView)),
                 // Dashboard Content Area
                 Expanded(
                   child: Padding(
@@ -69,6 +69,7 @@ class AdminDashboardScreen extends ConsumerWidget {
               ],
             ),
           ),
+          // Sidebar
         ],
       ),
     );
@@ -145,10 +146,10 @@ class AdminDashboardScreen extends ConsumerWidget {
           // Metrics grid
           LayoutBuilder(
             builder: (context, constraints) {
-              final double cardWidth = isMobile 
-                ? constraints.maxWidth 
+              final double cardWidth = isMobile
+                ? constraints.maxWidth
                 : (isTablet ? (constraints.maxWidth - 24) / 2 : (constraints.maxWidth - (24 * 4)) / 5);
-              
+
               return Wrap(
                 spacing: 24,
                 runSpacing: 24,
@@ -199,16 +200,38 @@ class AdminDashboardScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 24),
-            const RecentOrdersCard(),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Expanded(flex: 2, child: RecentOrdersCard()),
+                const SizedBox(width: 24),
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      TopProductsCard(),
+                      SizedBox(height: 24),
+                      QuickActionsCard(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ] else ...[
             const RevenueChartCard(),
             const SizedBox(height: 24),
             const CategorySalesCard(),
             const SizedBox(height: 24),
             const RecentOrdersCard(),
+            const SizedBox(height: 24),
+            const TopProductsCard(),
+            const SizedBox(height: 24),
+            const QuickActionsCard(),
           ],
         ],
       ),
-    ));
+    );
   }
 }

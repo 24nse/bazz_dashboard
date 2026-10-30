@@ -29,6 +29,7 @@ class RecentOrdersCard extends StatelessWidget {
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: const [
                     Text('أحدث الطلبات المستلمة', style: TextStyle(fontFamily: 'Plus Jakarta Sans', fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF131B2E))),
                     SizedBox(height: 4),
@@ -108,13 +109,16 @@ class RecentOrdersCard extends StatelessWidget {
                 child: const Icon(Icons.person, color: Color(0xFF3525CD), size: 18),
               ),
               const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(name, style: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF131B2E))),
-                  Text(location, style: const TextStyle(fontFamily: 'Inter', fontSize: 11, color: Color(0xFF777587))),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF131B2E))),
+                    Text(location, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: 'Inter', fontSize: 11, color: Color(0xFF777587))),
+                  ],
+                ),
               ),
             ],
           ),
@@ -135,7 +139,7 @@ class RecentOrdersCard extends StatelessWidget {
               children: [
                 Container(width: 6, height: 6, decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle)),
                 const SizedBox(width: 6),
-                Text(status, style: TextStyle(fontFamily: 'Inter', fontSize: 11, fontWeight: FontWeight.bold, color: statusColor)),
+                Flexible(child: Text(status, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontFamily: 'Inter', fontSize: 11, fontWeight: FontWeight.bold, color: statusColor))),
               ],
             ),
           ),

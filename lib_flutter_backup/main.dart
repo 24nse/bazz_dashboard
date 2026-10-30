@@ -16,6 +16,10 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      // builder: (context, child) => Directionality(
+      //   textDirection: TextDirection.rtl,
+      //   child: child!,
+      // ),
       home: const AdminDashboardScreen(),
     );
   }

@@ -29,6 +29,7 @@ class RevenueChartCard extends StatelessWidget {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Row(
                       children: [
@@ -113,6 +114,7 @@ class RevenueChartCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: const [
                     Text('أعلى يوم مبيعاً', style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: Color(0xFF777587))),
                     SizedBox(height: 4),
@@ -122,6 +124,7 @@ class RevenueChartCard extends StatelessWidget {
               ),
               Expanded(
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: const [
                     Text('نسبة تحقيق الهدف', style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: Color(0xFF777587))),
                     SizedBox(height: 4),
@@ -131,6 +134,7 @@ class RevenueChartCard extends StatelessWidget {
               ),
               Expanded(
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: const [
                     Text('التحويل من الإعلانات', style: TextStyle(fontFamily: 'Inter', fontSize: 12, color: Color(0xFF777587))),
                     SizedBox(height: 4),
@@ -220,6 +224,7 @@ class CategorySalesCard extends StatelessWidget {
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: const [
                     Text('الأعلى مبيعاً', style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: Color(0xFF777587))),
                     Text('42%', style: TextStyle(fontFamily: 'Plus Jakarta Sans', fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF131B2E))),

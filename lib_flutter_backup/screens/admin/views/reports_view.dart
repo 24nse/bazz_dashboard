@@ -23,10 +23,30 @@ class ReportsView extends StatelessWidget {
                 spacing: 24,
                 runSpacing: 24,
                 children: [
-                  SizedBox(width: cardWidth, child: const MetricCard(title: 'Gross Sales', value: '\$248,900', change: '12.3%', isPositive: true, icon: Icons.monetization_on_outlined)),
-                  SizedBox(width: cardWidth, child: const MetricCard(title: 'Net Profit', value: '\$87,420', change: '8.7%', isPositive: true, icon: Icons.account_balance_outlined)),
-                  SizedBox(width: cardWidth, child: const MetricCard(title: 'Avg. Order Value', value: '\$62.50', change: '3.1%', isPositive: false, icon: Icons.receipt_long_outlined)),
-                  SizedBox(width: cardWidth, child: const MetricCard(title: 'Refund Rate', value: '2.1%', change: '0.4%', isPositive: false, icon: Icons.undo_outlined)),
+                  SizedBox(width: cardWidth, child: MetricCard(
+                    title: 'Gross Sales', value: '248,900', unit: '\$', icon: Icons.monetization_on_outlined,
+                    iconBgColor: const Color(0xFFE2DFFF).withValues(alpha: 0.6), iconColor: const Color(0xFF3525CD),
+                    badgeText: '+12.3%', badgeBgColor: const Color(0xFFECFDF5), badgeTextColor: const Color(0xFF059669), badgeIcon: Icons.arrow_upward,
+                    subtitle: 'Since last month',
+                  )),
+                  SizedBox(width: cardWidth, child: MetricCard(
+                    title: 'Net Profit', value: '87,420', unit: '\$', icon: Icons.account_balance_outlined,
+                    iconBgColor: const Color(0xFFEAEDFF), iconColor: const Color(0xFF4D44E3),
+                    badgeText: '+8.7%', badgeBgColor: const Color(0xFFECFDF5), badgeTextColor: const Color(0xFF059669), badgeIcon: Icons.arrow_upward,
+                    subtitle: 'Since last month',
+                  )),
+                  SizedBox(width: cardWidth, child: MetricCard(
+                    title: 'Avg. Order Value', value: '62.50', unit: '\$', icon: Icons.receipt_long_outlined,
+                    iconBgColor: const Color(0xFFDAE2FD).withValues(alpha: 0.7), iconColor: const Color(0xFF464555),
+                    badgeText: '-3.1%', badgeBgColor: const Color(0xFFFEE2E2), badgeTextColor: const Color(0xFFEF4444), badgeIcon: Icons.arrow_downward,
+                    subtitle: 'Since last month',
+                  )),
+                  SizedBox(width: cardWidth, child: MetricCard(
+                    title: 'Refund Rate', value: '2.1%', unit: '', icon: Icons.undo_outlined,
+                    iconBgColor: const Color(0xFFE2E7FF), iconColor: const Color(0xFF3525CD),
+                    badgeText: '-0.4%', badgeBgColor: const Color(0xFFECFDF5), badgeTextColor: const Color(0xFF059669), badgeIcon: Icons.arrow_downward,
+                    subtitle: 'Since last month',
+                  )),
                 ],
               );
             },
