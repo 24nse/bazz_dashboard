@@ -40,23 +40,22 @@ class Sidebar extends StatelessComponent {
             Component.text('نظرة عامة وإدارة المتجر'),
           ]),
 
-          // Item: Dashboard (Active)
+          // Item: Dashboard
           a(
             classes:
-                'flex items-center justify-between px-3.5 py-3 rounded-xl bg-primary text-on-primary font-bold shadow-md shadow-primary/20 transition-all duration-150',
-            href: '#',
+                'flex items-center justify-between px-3.5 py-3 rounded-xl hover:bg-surface-container text-on-surface-variant font-medium transition-all duration-150',
+            href: '/',
             [
               div(classes: 'flex items-center gap-3', [
                 span(
                   classes: 'material-symbols-outlined text-[20px]',
-                  attributes: {'data-icon': 'dashboard', 'style': "font-variation-settings: 'FILL' 1;"},
+                  attributes: {'data-icon': 'dashboard'},
                   [Component.text('dashboard')],
                 ),
                 span(classes: 'font-label-md text-label-md', [
                   Component.text('الرئيسية والإحصائيات'),
                 ]),
               ]),
-              span(classes: 'w-1.5 h-1.5 rounded-full bg-white animate-pulse', []),
             ],
           ),
 
@@ -64,7 +63,7 @@ class Sidebar extends StatelessComponent {
           a(
             classes:
                 'flex items-center justify-between px-3.5 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all duration-150 group',
-            href: '#',
+            href: '/products',
             [
               div(classes: 'flex items-center gap-3', [
                 span(
@@ -81,6 +80,28 @@ class Sidebar extends StatelessComponent {
                     'bg-surface-container-high text-on-surface-variant group-hover:bg-primary-fixed group-hover:text-primary font-label-sm text-label-sm px-2 py-0.5 rounded-full transition-colors',
                 [Component.text('340')],
               ),
+            ],
+          ),
+
+          // Item: Add Product Quick Sub-link
+          a(
+            classes:
+                'flex items-center justify-between px-3 py-2 rounded-xl text-primary font-semibold bg-primary/5 hover:bg-primary/10 transition-all duration-150 mr-4',
+            href: '/add-product',
+            [
+              div(classes: 'flex items-center gap-2', [
+                span(
+                  classes: 'material-symbols-outlined text-[18px]',
+                  attributes: {'data-icon': 'add_circle'},
+                  [Component.text('add_circle')],
+                ),
+                span(classes: 'font-label-sm text-label-sm', [
+                  Component.text('إضافة منتج جديد +'),
+                ]),
+              ]),
+              span(classes: 'text-[10px] bg-primary text-on-primary px-1.5 py-0.2 rounded font-bold', [
+                Component.text('جديد'),
+              ]),
             ],
           ),
 

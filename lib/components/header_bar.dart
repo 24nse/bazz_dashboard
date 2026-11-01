@@ -112,9 +112,10 @@ class HeaderBar extends StatelessComponent {
           ]),
 
           // Add New Product Button
-          button(
+          a(
             classes:
                 'h-11 px-5 rounded-full bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md font-bold flex items-center gap-2 shadow-md shadow-primary/20 transition-all duration-150 active:scale-95',
+            href: '/add-product',
             [
               span(
                 classes: 'material-symbols-outlined text-[20px]',

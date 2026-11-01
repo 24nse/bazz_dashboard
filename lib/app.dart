@@ -4,7 +4,9 @@ import 'package:jaspr_router/jaspr_router.dart';
 
 import 'components/header_bar.dart';
 import 'components/sidebar.dart';
+import 'pages/add_product_page.dart';
 import 'pages/dashboard_page.dart';
+import 'pages/products_page.dart';
 
 class App extends StatelessComponent {
   const App({super.key});
@@ -26,6 +28,16 @@ class App extends StatelessComponent {
               path: '/',
               title: 'لوحة التحكم الإدارية | متجر نبض',
               builder: (context, state) => const DashboardPage(),
+            ),
+            Route(
+              path: '/products',
+              title: 'إدارة المنتجات والمخزون | متجر نبض',
+              builder: (context, state) => const ProductsPage(),
+            ),
+            Route(
+              path: '/add-product',
+              title: 'إضافة منتج جديد | متجر نبض',
+              builder: (context, state) => const AddProductPage(),
             ),
           ]),
         ]),

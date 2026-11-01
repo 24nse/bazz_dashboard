@@ -14,6 +14,33 @@ class QuickActions extends StatelessComponent {
           Component.text('اختصارات إدارية سريعة'),
         ]),
         div(classes: 'grid grid-cols-1 gap-2.5', [
+          // Quick Action: Add New Product
+          a(
+            classes:
+                'w-full flex items-center justify-between p-3 rounded-xl bg-primary/10 hover:bg-primary/15 border border-primary/20 text-primary transition-all group shadow-sm',
+            href: '/add-product',
+            [
+              div(classes: 'flex items-center gap-3', [
+                div(classes: 'w-9 h-9 rounded-lg bg-primary text-on-primary flex items-center justify-center shadow-xs', [
+                  span(
+                    classes: 'material-symbols-outlined text-[20px]',
+                    attributes: {'data-icon': 'add_circle'},
+                    [Component.text('add_circle')],
+                  ),
+                ]),
+                span(classes: 'font-label-md text-label-md font-bold', [
+                  Component.text('إضافة منتج جديد للمتجر +'),
+                ]),
+              ]),
+              span(
+                classes:
+                    'material-symbols-outlined text-primary group-hover:translate-x-[-2px] transition-transform text-[18px]',
+                attributes: {'data-icon': 'chevron_left'},
+                [Component.text('chevron_left')],
+              ),
+            ],
+          ),
+
           // Quick Action 1: Export Sales
           button(
             classes:
