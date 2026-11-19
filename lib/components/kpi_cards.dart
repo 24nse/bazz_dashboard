@@ -1,11 +1,15 @@
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
+import 'package:jaspr_riverpod/jaspr_riverpod.dart';
+
+import '../features/inventory/presentation/providers/inventory_providers.dart';
 
 class KpiCards extends StatelessComponent {
   const KpiCards({super.key});
 
   @override
   Component build(BuildContext context) {
+    final lowStockCount = context.watch(lowStockProductsCountProvider);
     return section(classes: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-space-md', [
       // Metric 1: Total Revenue
       div(
@@ -182,7 +186,7 @@ class KpiCards extends StatelessComponent {
           div([
             div(classes: 'flex items-baseline gap-1', [
               span(classes: 'font-price-lg text-headline-md font-extrabold text-secondary', [
-                Component.text('6'),
+                Component.text('$lowStockCount'),
               ]),
               span(classes: 'font-label-sm text-label-sm text-outline', [Component.text('منتجات')]),
             ]),

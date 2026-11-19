@@ -208,10 +208,8 @@ class ProductsPage extends StatelessComponent {
                       'h-11 pr-3 pl-8 rounded-full border border-surface-container-high bg-surface-container-low/50 text-on-surface text-body-sm focus:border-primary focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer',
                   [
                     option([Component.text('جميع الأقسام (الكل)')]),
-                    option([Component.text('أحذية وسنيكرز')]),
-                    option([Component.text('إلكترونيات وسماعات')]),
-                    option([Component.text('ملابس رجالية (cat_men)')]),
-                    option([Component.text('قمصان رجالية (cat_men_shirts)')]),
+                    for (final cat in (productsAsync.value?.map((p) => p.category).where((c) => c.isNotEmpty).toSet().toList() ?? ['أحذية وسنيكرز', 'إلكترونيات وسماعات', 'ملابس رجالية (cat_men)', 'قمصان رجالية (cat_men_shirts)']))
+                      option([Component.text(cat)]),
                   ],
                 ),
                 span(
