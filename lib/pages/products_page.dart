@@ -6,7 +6,7 @@ import '../features/inventory/data/models/product_model.dart';
 import '../features/inventory/presentation/providers/inventory_providers.dart';
 
 /// The Products & Inventory Management Page in Jaspr for Matjar Nabdh.
-/// Fully dynamic with Riverpod state management and live Firestore data.
+/// Fully dynamic with Riverpod state management and live Firestore root collection 'products'.
 class ProductsPage extends StatelessComponent {
   const ProductsPage({super.key});
 
@@ -16,6 +16,7 @@ class ProductsPage extends StatelessComponent {
     final totalProducts = context.watch(totalProductsCountProvider);
     final activeProducts = context.watch(activeProductsCountProvider);
     final lowStockProducts = context.watch(lowStockProductsCountProvider);
+    final selectedStoreId = context.watch(selectedStoreIdProvider);
     final isLoading = productsAsync.isLoading;
 
     return main_(
@@ -40,7 +41,7 @@ class ProductsPage extends StatelessComponent {
               div(classes: 'w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-on-primary shadow-sm', [
                 span(classes: 'material-symbols-outlined text-[20px]', [Component.text('inventory_2')]),
               ]),
-              Component.text('إدارة المنتجات والمخزون'),
+              Component.text('إدارة المنتجات والمخزون (Collection: products)'),
             ]),
           ]),
 
@@ -139,7 +140,7 @@ class ProductsPage extends StatelessComponent {
                   classes: 'text-[11px] text-emerald-600 font-semibold inline-flex items-center gap-0.5 mt-1',
                   [
                     span(classes: 'material-symbols-outlined text-[13px]', [Component.text('cloud_done')]),
-                    Component.text('مجموعة /Products'),
+                    Component.text('مجموعة /products'),
                   ],
                 ),
               ]),
@@ -180,7 +181,7 @@ class ProductsPage extends StatelessComponent {
           ),
         ]),
 
-        // Search & Filters Toolbar
+        // Search & Filters Toolbar (With Department and Store Filter)
         div(
           classes:
               'bg-surface-container-lowest p-4 rounded-2xl border border-surface-container-high/40 shadow-sm flex flex-wrap items-center justify-between gap-4',
@@ -197,25 +198,28 @@ class ProductsPage extends StatelessComponent {
                   classes:
                       'w-full h-11 pr-10 pl-4 rounded-full border border-surface-container-high bg-surface-container-low/50 text-on-surface text-body-sm placeholder:text-outline focus:border-primary focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none transition-all',
                   type: InputType.text,
-                  attributes: {'placeholder': 'البحث بالاسم، كود SKU، أو الماركة...'},
+                  attributes: {'placeholder': 'البحث بالاسم أو القسم (women, men, kids)...'},
                 ),
               ]),
 
-              // Category filter
+              // Store filter
               div(classes: 'relative', [
                 select(
                   classes:
                       'h-11 pr-3 pl-8 rounded-full border border-surface-container-high bg-surface-container-low/50 text-on-surface text-body-sm focus:border-primary focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer',
+                  events: {'change': (e) {
+                    final val = (e.target as dynamic).value?.toString();
+                    context.read(selectedStoreIdProvider.notifier).state = (val == null || val.isEmpty || val == 'all') ? null : val;
+                  }},
                   [
-                    option([Component.text('جميع الأقسام (الكل)')]),
-                    for (final cat in (productsAsync.value?.map((p) => p.category).where((c) => c.isNotEmpty).toSet().toList() ?? ['أحذية وسنيكرز', 'إلكترونيات وسماعات', 'ملابس رجالية (cat_men)', 'قمصان رجالية (cat_men_shirts)']))
-                      option([Component.text(cat)]),
+                    option(value: 'all', selected: selectedStoreId == null, [Component.text('جميع المتاجر (All Stores)')]),
+                    option(value: 'store_01', selected: selectedStoreId == 'store_01', [Component.text('متجر: store_01')]),
                   ],
                 ),
                 span(
                   classes:
                       'material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[18px]',
-                  [Component.text('expand_more')],
+                  [Component.text('store')],
                 ),
               ]),
             ]),
@@ -246,12 +250,12 @@ class ProductsPage extends StatelessComponent {
                     th(classes: 'py-3.5 px-4 w-12 text-center', [
                       input(classes: 'rounded border-outline-variant text-primary focus:ring-primary', type: InputType.checkbox),
                     ]),
-                    th(classes: 'py-3.5 px-4', [Component.text('المنتج والتفاصيل')]),
-                    th(classes: 'py-3.5 px-4', [Component.text('القسم / التصنيف')]),
-                    th(classes: 'py-3.5 px-4', [Component.text('السعر')]),
-                    th(classes: 'py-3.5 px-4', [Component.text('حالة المخزون')]),
-                    th(classes: 'py-3.5 px-4', [Component.text('المصدر / المصادقة')]),
-                    th(classes: 'py-3.5 px-4 text-center', [Component.text('حالة النشر')]),
+                    th(classes: 'py-3.5 px-4', [Component.text('المنتج والتفاصيل (title)')]),
+                    th(classes: 'py-3.5 px-4', [Component.text('القسم / التصنيف (topTab / categoryId)')]),
+                    th(classes: 'py-3.5 px-4', [Component.text('السعر والتخفيض (price / salePrice)')]),
+                    th(classes: 'py-3.5 px-4', [Component.text('المخزون (stock)')]),
+                    th(classes: 'py-3.5 px-4', [Component.text('المتجر والتاجر (storeId / vendorId)')]),
+                    th(classes: 'py-3.5 px-4 text-center', [Component.text('الحالة (isActive)')]),
                     th(classes: 'py-3.5 px-4 text-center', [Component.text('الإجراءات')]),
                   ]),
                 ]),
@@ -312,10 +316,10 @@ class ProductsPage extends StatelessComponent {
                             ]),
                             div([
                               p(classes: 'font-bold text-on-surface text-base', [
-                                Component.text('لا توجد منتجات مسجلة في Firestore بعد'),
+                                Component.text('لا توجد منتجات مسجلة في مجموعة /products بعد'),
                               ]),
                               p(classes: 'text-xs text-outline mt-1', [
-                                Component.text('ابدأ بإضافة أول منتج لمتجر نبض ليتمكن العميل من بدء العمل.'),
+                                Component.text('ابدأ بإضافة أول منتج لتجربة البنية التحتية الجديدة NoSQL.'),
                               ]),
                             ]),
                             a(
@@ -331,10 +335,10 @@ class ProductsPage extends StatelessComponent {
                         ],
                       ),
                     ])
-                  // Live Dynamic Products (Static mock items completely eliminated)
+                  // Live Dynamic Products
                   else
                     for (final product in productsAsync.value!)
-                      _buildProductRow(product),
+                      _buildProductRow(context, product),
                 ]),
               ]),
             ]),
@@ -344,7 +348,7 @@ class ProductsPage extends StatelessComponent {
     );
   }
 
-  static Component _buildProductRow(ProductModel product) {
+  static Component _buildProductRow(BuildContext context, ProductModel product) {
     final stockLabel = product.isOutOfStock
         ? 'نفذت الكمية (0)'
         : (product.isLowStock
@@ -371,7 +375,9 @@ class ProductsPage extends StatelessComponent {
         div(classes: 'flex items-center gap-3', [
           img(
             classes: 'w-12 h-12 rounded-xl object-cover bg-surface-container border border-surface-container-high shrink-0',
-            src: product.imageUrl,
+            src: product.thumbnail.isNotEmpty
+                ? product.thumbnail
+                : 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500',
             alt: product.displayName,
           ),
           div([
@@ -379,29 +385,38 @@ class ProductsPage extends StatelessComponent {
               a(classes: 'font-bold text-on-surface hover:text-primary transition-colors', href: '/add-product', [
                 Component.text(product.displayName),
               ]),
-              span(classes: 'bg-primary-fixed text-primary text-[10px] font-bold px-1.5 py-0.5 rounded-full', [
-                Component.text('Firestore Live'),
-              ]),
+              if (product.isFeatured)
+                span(classes: 'bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5 rounded-full', [
+                  Component.text('مميز ⭐'),
+                ]),
             ]),
             div(classes: 'flex items-center gap-2 mt-0.5', [
               span(classes: 'text-[11px] font-mono bg-surface-container px-1.5 py-0.5 rounded text-outline', [
-                Component.text('SKU: ${product.sku}'),
+                Component.text('ID: ${product.id.length > 8 ? product.id.substring(0, 8) : product.id}'),
               ]),
-              span(classes: 'text-[11px] text-outline', [Component.text('الماركة: ${product.brand}')]),
+              if (product.saleLabel.isNotEmpty)
+                span(classes: 'text-[11px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded', [
+                  Component.text(product.saleLabel),
+                ]),
             ]),
           ]),
         ]),
       ]),
       td(classes: 'py-4 px-4', [
-        span(classes: 'bg-surface-container text-on-surface px-2.5 py-1 rounded-full text-xs font-medium', [
-          Component.text(product.category),
+        div(classes: 'flex flex-col gap-1', [
+          span(classes: 'bg-primary-fixed/60 text-primary px-2.5 py-0.5 rounded-full text-xs font-bold w-fit', [
+            Component.text('القسم: ${product.topTab}'),
+          ]),
+          span(classes: 'text-[11px] font-mono text-outline', [
+            Component.text(product.categoryId),
+          ]),
         ]),
       ]),
       td(classes: 'py-4 px-4', [
         div(classes: 'font-price-sm text-price-sm text-on-surface font-bold', [
           Component.text('${product.effectivePrice} ر.س'),
         ]),
-        if (product.discountPrice != null && product.discountPrice != product.price)
+        if (product.hasDiscount)
           div(classes: 'text-[11px] text-outline line-through', [
             Component.text('${product.price} ر.س'),
           ]),
@@ -415,15 +430,24 @@ class ProductsPage extends StatelessComponent {
           div(classes: '${colorClasses.$1} h-full rounded-full', attributes: {'style': 'width: $stockPercent%'}, []),
         ]),
       ]),
-      td(classes: 'py-4 px-4 font-semibold text-on-surface', [
-        span(classes: 'text-xs text-primary font-bold flex items-center gap-1', [
-          span(classes: 'material-symbols-outlined text-[14px]', [Component.text('cloud_done')]),
-          Component.text(product.sales ?? 'Firestore Live'),
+      td(classes: 'py-4 px-4', [
+        div(classes: 'text-xs text-on-surface space-y-0.5', [
+          div([span(classes: 'text-outline', [Component.text('متجر: ')]), Component.text(product.storeId)]),
+          div([span(classes: 'text-outline', [Component.text('تاجر: ')]), Component.text(product.vendorId)]),
         ]),
       ]),
       td(classes: 'py-4 px-4 text-center', [
         label(classes: 'relative inline-flex items-center cursor-pointer', [
-          input(classes: 'sr-only peer', type: InputType.checkbox, checked: product.isPublished),
+          input(
+            classes: 'sr-only peer',
+            type: InputType.checkbox,
+            checked: product.isActive,
+            events: {'change': (e) {
+              if (product.id.isNotEmpty) {
+                context.read(productsNotifierProvider.notifier).updateProduct(product.id, {'isActive': !product.isActive});
+              }
+            }},
+          ),
           div(
             classes:
                 'w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[\'\'] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary',
@@ -440,13 +464,13 @@ class ProductsPage extends StatelessComponent {
             [span(classes: 'material-symbols-outlined text-[18px]', [Component.text('edit')])],
           ),
           button(
-            classes: 'p-1.5 rounded-lg hover:bg-surface-container hover:text-primary transition-colors',
-            attributes: {'title': 'معاينة في المتجر'},
-            [span(classes: 'material-symbols-outlined text-[18px]', [Component.text('visibility')])],
-          ),
-          button(
-            classes: 'p-1.5 rounded-lg hover:bg-error-container hover:text-error transition-colors',
-            attributes: {'title': 'حذف'},
+            classes: 'p-1.5 rounded-lg hover:bg-error-container hover:text-error transition-colors cursor-pointer',
+            attributes: {'title': 'حذف من Firestore'},
+            events: {'click': (e) {
+              if (product.id.isNotEmpty) {
+                context.read(productsNotifierProvider.notifier).deleteProduct(product.id);
+              }
+            }},
             [span(classes: 'material-symbols-outlined text-[18px]', [Component.text('delete')])],
           ),
         ]),

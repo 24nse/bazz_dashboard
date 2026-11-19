@@ -5,7 +5,13 @@ import 'dart:js_interop';
 external JSPromise<JSString> _jsAddProductToFirestore(JSString jsonStr);
 
 @JS('getProductsFromFirestore')
-external JSPromise<JSString> _jsGetProductsFromFirestore(JSString? colName);
+external JSPromise<JSString> _jsGetProductsFromFirestore(JSString? colName, JSString? storeId);
+
+@JS('updateProductInFirestore')
+external JSPromise<JSString> _jsUpdateProductInFirestore(JSString docId, JSString updatesJsonStr, JSString? colName);
+
+@JS('deleteProductFromFirestore')
+external JSPromise<JSString> _jsDeleteProductFromFirestore(JSString docId, JSString? colName);
 
 @JS('checkCollectionStatus')
 external JSPromise<JSString> _jsCheckCollectionStatus(JSString colName);
@@ -18,7 +24,7 @@ external JSString _jsSetFirebaseConfig(JSString jsonStr);
 
 class FirebaseService {
   static const String defaultProjectId = 'lipsak-97e24';
-  static const String defaultCollection = 'Products';
+  static const String defaultCollection = 'products'; // Root Collection 'products'
 
   /// Check whether a collection exists and is accessible
   static Future<Map<String, dynamic>> checkCollection(String collectionName) async {
@@ -36,7 +42,7 @@ class FirebaseService {
     }
   }
 
-  /// Save a product to Firestore in project lipsak
+  /// Save a product to Firestore in root collection 'products'
   static Future<Map<String, dynamic>> addProduct(Map<String, dynamic> productData) async {
     try {
       final jsonStr = jsonEncode(productData);
@@ -53,11 +59,15 @@ class FirebaseService {
     }
   }
 
-  /// Fetch all products from Firestore
-  static Future<List<Map<String, dynamic>>> getProducts({String? collection}) async {
+  /// Fetch products from Firestore with optional storeId filtering
+  static Future<List<Map<String, dynamic>>> getProducts({
+    String? storeId,
+    String? collection,
+  }) async {
     try {
       final col = (collection ?? defaultCollection).toJS;
-      final promise = _jsGetProductsFromFirestore(col);
+      final sId = storeId != null && storeId.isNotEmpty ? storeId.toJS : null;
+      final promise = _jsGetProductsFromFirestore(col, sId);
       final jsResult = await promise.toDart;
       final resultStr = jsResult.toDart;
       final data = jsonDecode(resultStr) as Map<String, dynamic>;
@@ -67,6 +77,48 @@ class FirebaseService {
       return [];
     } catch (_) {
       return [];
+    }
+  }
+
+  /// Update a product in Firestore (e.g. stock, price, salePrice)
+  static Future<Map<String, dynamic>> updateProduct(
+    String docId,
+    Map<String, dynamic> updates, {
+    String? collection,
+  }) async {
+    try {
+      final id = docId.toJS;
+      final updatesStr = jsonEncode(updates).toJS;
+      final col = (collection ?? defaultCollection).toJS;
+      final promise = _jsUpdateProductInFirestore(id, updatesStr, col);
+      final jsResult = await promise.toDart;
+      final resultStr = jsResult.toDart;
+      return jsonDecode(resultStr) as Map<String, dynamic>;
+    } catch (e) {
+      return {
+        'success': false,
+        'error': e.toString(),
+      };
+    }
+  }
+
+  /// Delete a product document from Firestore root collection 'products'
+  static Future<Map<String, dynamic>> deleteProduct(
+    String docId, {
+    String? collection,
+  }) async {
+    try {
+      final id = docId.toJS;
+      final col = (collection ?? defaultCollection).toJS;
+      final promise = _jsDeleteProductFromFirestore(id, col);
+      final jsResult = await promise.toDart;
+      final resultStr = jsResult.toDart;
+      return jsonDecode(resultStr) as Map<String, dynamic>;
+    } catch (e) {
+      return {
+        'success': false,
+        'error': e.toString(),
+      };
     }
   }
 

@@ -22,17 +22,17 @@
       </div>
       <div class="flex justify-between">
         <span class="text-slate-400">Collection:</span>
-        <span class="text-amber-400 font-bold">Products</span>
+        <span class="text-amber-400 font-bold">products</span>
       </div>
       <div class="flex justify-between">
-        <span class="text-slate-400">Linked Category:</span>
-        <span class="text-sky-400">cat_men_shirts (قمصان رجالية)</span>
+        <span class="text-slate-400">Schema Format:</span>
+        <span class="text-sky-400">Flat NoSQL (products)</span>
       </div>
     </div>
 
     <button id="btnSeed" onclick="seedProducts()" class="w-full py-3.5 px-6 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition-all shadow-lg shadow-amber-500/20 active:scale-95 flex items-center justify-center gap-2 cursor-pointer">
       <span id="btnIcon">🚀</span>
-      <span id="btnText">إضافة منتجات تجريبية وإنشاء مجموعة Products الآن</span>
+      <span id="btnText">إضافة منتجات تجريبية إلى مجموعة products الآن</span>
     </button>
 
     <div id="logArea" class="hidden bg-black/60 p-4 rounded-2xl border border-slate-700 text-xs font-mono max-h-56 overflow-y-auto space-y-1 text-slate-300">
@@ -50,34 +50,44 @@
 
   <script>
     const PROJECT_ID = 'lipsak-97e24';
-    const COLLECTION = 'Products';
+    const COLLECTION = 'products';
 
     const products = [
       {
-        Title: 'قميص أكسفورد كلاسيكي فاخر',
-        Name: 'قميص أكسفورد كلاسيكي فاخر',
-        Price: 189,
-        SalePrice: 149,
-        Stock: 45,
-        CategoryId: 'cat_men_shirts',
-        Brand: 'Zara',
-        SKU: 'SHIRT-OXF-01',
-        Thumbnail: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500',
-        IsFeatured: true,
-        Description: 'قميص رجالي فاخر من القطن الصافي 100% مناسب للمناسبات الرسمية والعمل.'
+        storeId: 'store_01',
+        vendorId: 'vendor_01',
+        categoryId: 'women_dresses',
+        topTab: 'women',
+        title: 'فستان سهرة كريب راقي مطرز',
+        description: 'فستان سهرة نسائي فاخر من الكريب الناعم وتطريز يدوي أنيق.',
+        thumbnail: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500',
+        images: ['https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500'],
+        price: 299,
+        salePrice: 239,
+        saleLabel: 'خصم 20%',
+        stock: 25,
+        rating: 0.0,
+        reviewsCount: 0,
+        isFeatured: true,
+        isActive: true
       },
       {
-        Title: 'تيشيرت بولو رياضي قطني',
-        Name: 'تيشيرت بولو رياضي قطني',
-        Price: 129,
-        SalePrice: 99,
-        Stock: 60,
-        CategoryId: 'cat_men',
-        Brand: 'Nike',
-        SKU: 'TSHIRT-POLO-02',
-        Thumbnail: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=500',
-        IsFeatured: true,
-        Description: 'تيشيرت بولو شبابي أنيق وعملي للاستخدام اليومي والرياضي.'
+        storeId: 'store_01',
+        vendorId: 'vendor_01',
+        categoryId: 'men_shirts',
+        topTab: 'men',
+        title: 'قميص أكسفورد كلاسيكي فاخر',
+        description: 'قميص رجالي فاخر من القطن الصافي 100% مناسب للمناسبات الرسمية والعمل.',
+        thumbnail: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500',
+        images: ['https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500'],
+        price: 189,
+        salePrice: 149,
+        saleLabel: 'خصم 21%',
+        stock: 45,
+        rating: 0.0,
+        reviewsCount: 0,
+        isFeatured: false,
+        isActive: true
       }
     ];
 
@@ -85,10 +95,16 @@
       const fields = {};
       for (const [k, v] of Object.entries(obj)) {
         if (typeof v === 'string') fields[k] = { stringValue: v };
-        else if (typeof v === 'number') fields[k] = { doubleValue: v };
+        else if (typeof v === 'number') {
+          if (Number.isInteger(v)) fields[k] = { integerValue: String(v) };
+          else fields[k] = { doubleValue: v };
+        }
         else if (typeof v === 'boolean') fields[k] = { booleanValue: v };
+        else if (Array.isArray(v)) {
+          fields[k] = { arrayValue: { values: v.map(item => ({ stringValue: String(item) })) } };
+        }
       }
-      fields.CreatedAt = { timestampValue: new Date().toISOString() };
+      fields.createdAt = { timestampValue: new Date().toISOString() };
       return { fields };
     }
 

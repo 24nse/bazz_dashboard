@@ -2,11 +2,12 @@ import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:jaspr_riverpod/jaspr_riverpod.dart';
 
+import '../features/inventory/data/models/product_model.dart';
 import '../features/inventory/presentation/providers/inventory_providers.dart';
 import '../services/firebase_service.dart';
 
-/// The Add Product Page in Jaspr for Matjar Nabdh Admin Dashboard.
-/// Implements full Firebase Firestore integration for project 'lipsak'.
+/// The Add / Edit Product Page in Jaspr for Matjar Nabdh Vendor Dashboard.
+/// Strictly integrates with the flat NoSQL Firestore schema for root collection 'products'.
 class AddProductPage extends StatefulComponent {
   const AddProductPage({super.key});
 
@@ -15,32 +16,37 @@ class AddProductPage extends StatefulComponent {
 }
 
 class _AddProductPageState extends State<AddProductPage> {
-  // Form state
-  String nameAr = 'قميص أكسفورد قطني فاخر';
-  String nameEn = 'Classic Oxford Cotton Shirt';
-  String sku = 'SHIRT-OXF-01';
-  String barcode = '628100923847';
+  // --- Exact Firestore Schema State (Root collection 'products') ---
+  String storeId = 'store_01';
+  String vendorId = 'vendor_01';
+  String topTab = 'women'; // Main Department ('women', 'men', 'kids')
+  String categoryId = 'women_dresses'; // Sub-category
+  String title = 'فستان سهرة كريب راقي';
   String description =
-      'قميص رجالي مصنوع من القطن الطبيعي 100% عالي الجودة بتصميم كلاسيكي مريح مناسب للعمل والمناسبات الرسمية.';
-  String category = 'cat_men_shirts';
-  String brand = 'Zara';
-  String price = '189';
-  String discountPrice = '149';
-  String stock = '35';
-  String lowStockThreshold = '5';
-  bool isTaxIncluded = true;
-  bool isPublished = true;
-  String targetCollection = 'Products';
-  String imageUrl =
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDWnaA1xderq1MlEPMwI9HNmHkmJW71LkSgseqGGboAEwdE-_wFaxzVPNtGUB0QMWakdritPZ4b9eKQqA1cCr74EHpJmdNws0zBmoOP8nW7v-5yulYG5WO_LunNrqSZYW8FOA45E2nfPjXvtp4eggUysjR5AmC2AJUMRmNjFdl5wv_4GZqk7a1pVxaDuTbhNcIbELLqAnTcIhTqzGQxdkAbjd6r0egLM0bN_8IgjpT_3c_BkTYczcaY';
+      'فستان سهرة نسائي مصمم من خامة الكريب الفاخرة بقصة أنيقة ومريحة، ملائم للمناسبات الرسمية والاحتفالات.';
+  String thumbnail =
+      'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500';
+  String galleryImage1 =
+      'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=500';
+  String price = '299';
+  String salePrice = '239';
+  String saleLabel = 'خصم 20%';
+  String stock = '25';
+  double rating = 0.0;
+  int reviewsCount = 0;
+  bool isFeatured = false;
+  bool isActive = true;
 
-  // Submission & Firebase state
+  // Root collection - strictly lowercase 'products' as per new schema
+  String targetCollection = 'products';
+
+  // Submission & Validation state
   bool isLoading = false;
   bool isSaved = false;
-  bool isNewCollectionCreated = false;
   String? savedDocId;
   String? errorMessage;
   String? errorCode;
+  List<String> validationErrors = [];
   bool showConfigModal = false;
 
   // Collection existence check
@@ -52,24 +58,35 @@ class _AddProductPageState extends State<AddProductPage> {
   String configProjectId = 'lipsak';
   String configAuthDomain = 'lipsak.firebaseapp.com';
 
-  final List<String> sizes = ['S', 'M', 'L', 'XL', 'XXL'];
-  final List<String> selectedSizes = ['M', 'L', 'XL'];
-  final List<Map<String, String>> colors = [
-    {'name': 'أبيض', 'bg': 'bg-white', 'ring': 'ring-gray-300'},
-    {'name': 'أزرق سماوي', 'bg': 'bg-sky-400', 'ring': 'ring-sky-500'},
-    {'name': 'كحلي', 'bg': 'bg-blue-900', 'ring': 'ring-blue-900'},
-    {'name': 'أسود', 'bg': 'bg-black', 'ring': 'ring-black'},
-  ];
-  String selectedColor = 'أبيض';
+  // --- Department Tabs & Sub-categories (Context-First) ---
+  static const Map<String, String> departmentOptions = {
+    'women': 'نساء (women)',
+    'men': 'رجال (men)',
+    'kids': 'أطفال (kids)',
+  };
 
-  // Real categories from lipsak Firestore
-  final List<Map<String, String>> storeCategories = [
-    {'id': 'cat_men_shirts', 'name': 'قمصان رجالية (cat_men_shirts)'},
-    {'id': 'cat_men', 'name': 'ملابس رجالية (cat_men)'},
-    {'id': 'cat_women', 'name': 'ملابس نسائية (cat_women)'},
-    {'id': 'cat_kids', 'name': 'ملابس أطفال (cat_kids)'},
-    {'id': 'shoes', 'name': 'أحذية وسنيكرز'},
-  ];
+  static const Map<String, List<Map<String, String>>> subCategoriesByDept = {
+    'women': [
+      {'id': 'women_dresses', 'name': 'فساتين نسائية (women_dresses)'},
+      {'id': 'women_abayas', 'name': 'عبايات وجلابيات (women_abayas)'},
+      {'id': 'women_shoes', 'name': 'أحذية نسائية (women_shoes)'},
+      {'id': 'women_bags', 'name': 'حقائب وإكسسوارات (women_bags)'},
+      {'id': 'women_tops', 'name': 'بلايز وتنانير (women_tops)'},
+    ],
+    'men': [
+      {'id': 'men_shirts', 'name': 'قمصان رجالية (men_shirts)'},
+      {'id': 'men_thobes', 'name': 'أثواب وشماغ (men_thobes)'},
+      {'id': 'men_shoes', 'name': 'أحذية وسنيكرز (men_shoes)'},
+      {'id': 'men_pants', 'name': 'بنطلونات جينز وقماش (men_pants)'},
+      {'id': 'men_accessories', 'name': 'ساعات وإكسسوارات (men_accessories)'},
+    ],
+    'kids': [
+      {'id': 'kids_boys', 'name': 'ملابس أولاد (kids_boys)'},
+      {'id': 'kids_girls', 'name': 'ملابس بنات (kids_girls)'},
+      {'id': 'kids_shoes', 'name': 'أحذية أطفال (kids_shoes)'},
+      {'id': 'kids_baby', 'name': 'مواليد ورضع (kids_baby)'},
+    ],
+  };
 
   @override
   void initState() {
@@ -94,59 +111,125 @@ class _AddProductPageState extends State<AddProductPage> {
     });
   }
 
+  void _onDepartmentChanged(String newDept) {
+    setState(() {
+      topTab = newDept;
+      final subCats = subCategoriesByDept[newDept] ?? [];
+      if (subCats.isNotEmpty) {
+        categoryId = subCats.first['id']!;
+      }
+    });
+  }
+
+  void _recalcSaleLabel() {
+    final p = double.tryParse(price) ?? 0.0;
+    final sp = double.tryParse(salePrice) ?? 0.0;
+    if (p > 0 && sp > 0 && sp < p) {
+      final pct = (((p - sp) / p) * 100).round();
+      setState(() => saleLabel = 'خصم $pct%');
+    } else if (sp == 0 || sp >= p) {
+      setState(() => saleLabel = '');
+    }
+  }
+
+  List<String> _validateInputs() {
+    final errors = <String>[];
+    if (title.trim().isEmpty) errors.add('اسم المنتج (title) حقل إجباري.');
+    if (storeId.trim().isEmpty) errors.add('معرف المتجر (storeId) حقل إجباري.');
+    if (vendorId.trim().isEmpty) errors.add('معرف التاجر (vendorId) حقل إجباري.');
+    if (topTab.trim().isEmpty) errors.add('القسم الرئيسي (topTab) حقل إجباري.');
+    if (categoryId.trim().isEmpty) errors.add('التصنيف الفرعي (categoryId) حقل إجباري.');
+    if (thumbnail.trim().isEmpty) errors.add('رابط صورة المنتج الرئيسية (thumbnail) إجباري.');
+
+    final p = double.tryParse(price);
+    if (p == null || p <= 0) {
+      errors.add('السعر الأصلي (price) يجب أن يكون رقماً أكبر من صفر.');
+    }
+
+    final s = int.tryParse(stock);
+    if (s == null || s < 0) {
+      errors.add('الكمية بالمخزون (stock) يجب أن تكون 0 أو رقماً صحيحاً موجباً.');
+    }
+
+    final sp = double.tryParse(salePrice);
+    if (sp != null && sp > 0 && p != null && sp >= p) {
+      errors.add('سعر البيع المخفض (salePrice) يجب أن يكون أقل من السعر الأساسي (price).');
+    }
+
+    return errors;
+  }
+
   void _resetForm() {
     setState(() {
       isSaved = false;
       savedDocId = null;
       errorMessage = null;
       errorCode = null;
-      isNewCollectionCreated = false;
-      nameAr = '';
-      nameEn = '';
-      sku = '';
-      barcode = '';
+      validationErrors = [];
+      title = '';
       description = '';
       price = '';
-      discountPrice = '';
-      stock = '';
-      lowStockThreshold = '5';
+      salePrice = '';
+      saleLabel = '';
+      stock = '0';
+      thumbnail = '';
+      galleryImage1 = '';
     });
   }
 
   Future<void> _saveProduct({bool publish = true}) async {
+    // Validate inputs
+    final errors = _validateInputs();
+    if (errors.isNotEmpty) {
+      setState(() {
+        validationErrors = errors;
+        errorMessage = 'يرجى مراجعة الحقول المطلوبة والتأكد من صحتها قبل الحفظ.';
+      });
+      return;
+    }
+
     setState(() {
       isLoading = true;
       errorMessage = null;
       errorCode = null;
+      validationErrors = [];
       isSaved = false;
       savedDocId = null;
-      isNewCollectionCreated = false;
+      isActive = publish;
     });
 
-    final productData = {
-      'collectionName': targetCollection,
-      'nameAr': nameAr,
-      'nameEn': nameEn,
-      'sku': sku,
-      'barcode': barcode,
-      'description': description,
-      'price': double.tryParse(price) ?? 0.0,
-      'discountPrice': double.tryParse(discountPrice) ?? 0.0,
-      'stock': int.tryParse(stock) ?? 0,
-      'lowStockThreshold': int.tryParse(lowStockThreshold) ?? 5,
-      'category': category,
-      'categoryId': category,
-      'brand': brand,
-      'isTaxIncluded': isTaxIncluded,
-      'isPublished': publish,
-      'sizes': selectedSizes,
-      'color': selectedColor,
-      'imageUrl': imageUrl,
-      'status': publish ? 'active' : 'draft',
-      'firebaseProject': configProjectId,
-    };
+    final p = double.tryParse(price) ?? 0.0;
+    final sp = double.tryParse(salePrice) ?? 0.0;
+    final s = int.tryParse(stock) ?? 0;
 
-    final result = await FirebaseService.addProduct(productData);
+    final galleryList = <String>[];
+    if (thumbnail.trim().isNotEmpty) galleryList.add(thumbnail.trim());
+    if (galleryImage1.trim().isNotEmpty) galleryList.add(galleryImage1.trim());
+
+    final productModel = ProductModel(
+      storeId: storeId.trim(),
+      vendorId: vendorId.trim(),
+      categoryId: categoryId.trim(),
+      topTab: topTab.trim(),
+      title: title.trim(),
+      description: description.trim(),
+      thumbnail: thumbnail.trim(),
+      images: galleryList,
+      price: p,
+      salePrice: sp,
+      saleLabel: saleLabel.trim(),
+      stock: s,
+      rating: rating,
+      reviewsCount: reviewsCount,
+      isFeatured: isFeatured,
+      isActive: publish,
+    );
+
+    // Save strictly to Firestore 'products' root collection
+    final payload = productModel.toFirestore();
+    payload['collectionName'] = targetCollection;
+
+    final result = await FirebaseService.addProduct(payload);
 
     if (result['success'] == true) {
       context.read(productsNotifierProvider.notifier).refresh();
@@ -156,8 +239,7 @@ class _AddProductPageState extends State<AddProductPage> {
       isLoading = false;
       if (result['success'] == true) {
         isSaved = true;
-        savedDocId = result['id']?.toString() ?? 'unknown-id';
-        isNewCollectionCreated = result['isNewCollection'] == true;
+        savedDocId = result['id']?.toString() ?? 'new_doc';
         collectionAlreadyExists = true;
       } else {
         errorMessage = result['error']?.toString() ?? 'فشل الاتصال بقاعدة بيانات Firebase';
@@ -181,6 +263,8 @@ class _AddProductPageState extends State<AddProductPage> {
 
   @override
   Component build(BuildContext context) {
+    final currentSubCategories = subCategoriesByDept[topTab] ?? [];
+
     return main_(
       classes: 'flex-1 overflow-y-auto custom-scroll p-space-xl space-y-space-xl',
       [
@@ -210,7 +294,7 @@ class _AddProductPageState extends State<AddProductPage> {
               div(classes: 'w-9 h-9 rounded-xl bg-primary-fixed text-primary flex items-center justify-center', [
                 span(classes: 'material-symbols-outlined text-[22px]', [Component.text('add_box')]),
               ]),
-              Component.text('إضافة منتج جديد إلى مشروع lipsak في Firebase'),
+              Component.text('إضافة منتج جديد (Root Collection: $targetCollection)'),
             ]),
           ]),
 
@@ -227,12 +311,12 @@ class _AddProductPageState extends State<AddProductPage> {
             ),
             button(
               classes:
-                  'px-4 py-2 rounded-full border border-surface-container-high bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-md text-label-md transition-all flex items-center gap-2 disabled:opacity-50',
+                  'px-4 py-2 rounded-full border border-surface-container-high bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-md text-label-md transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer',
               disabled: isLoading,
               events: {'click': (e) => _saveProduct(publish: false)},
               [
                 span(classes: 'material-symbols-outlined text-[18px]', [Component.text('drafts')]),
-                Component.text('حفظ كمسودة'),
+                Component.text('حفظ كمسودة غير نشطة'),
               ],
             ),
             button(
@@ -245,13 +329,29 @@ class _AddProductPageState extends State<AddProductPage> {
                   span(classes: 'w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin', [])
                 else
                   span(classes: 'material-symbols-outlined text-[20px]', [Component.text('cloud_done')]),
-                Component.text(isLoading ? 'جارٍ الإضافة لقاعدة البيانات...' : 'حفظ ونشر في Firebase ($targetCollection)'),
+                Component.text(isLoading ? 'جارٍ الحفظ في Firestore...' : 'حفظ ونشر المنتج في Firestore'),
               ],
             ),
           ]),
         ]),
 
-        // 1. Pre-addition status: Collection existence notice
+        // Validation Errors Banner
+        if (validationErrors.isNotEmpty)
+          div(
+            classes:
+                'p-4 bg-amber-50 border-2 border-amber-300 rounded-2xl text-amber-950 shadow-sm animate-fade-in space-y-2',
+            [
+              div(classes: 'flex items-center gap-2 font-bold text-sm text-amber-900', [
+                span(classes: 'material-symbols-outlined text-[20px] text-amber-600', [Component.text('warning')]),
+                Component.text('تنبيه: تعذر إرسال النموذج بسبب الأخطاء التالية:'),
+              ]),
+              ul(classes: 'list-disc list-inside text-xs space-y-1 text-amber-900 pr-4', [
+                for (final err in validationErrors) li([Component.text(err)]),
+              ]),
+            ],
+          ),
+
+        // Pre-addition status: Collection notice
         if (collectionAlreadyExists == false && !isSaved)
           div(
             classes:
@@ -263,40 +363,20 @@ class _AddProductPageState extends State<AddProductPage> {
                 ]),
                 div([
                   p(classes: 'font-bold font-label-md text-sky-950', [
-                    Component.text('مجموعة "$targetCollection" غير موجودة حالياً في قاعدة بيانات $configProjectId.'),
+                    Component.text('المجموعة المستهدفة: /$targetCollection في مشروع $configProjectId'),
                   ]),
                   p(classes: 'text-xs text-sky-800 mt-0.5', [
-                    Component.text(
-                      'في Firebase Firestore لا تظهر المجموعات إلا بعد كتابة أول مستند بداخلها. سيتم إنشاء مجموعة "$targetCollection" تلقائياً بمجرد ضغط "حفظ ونشر".',
-                    ),
+                    Component.text('ستُنشأ المستندات طبقاً للهيكل المسطح NoSQL المتفق عليه فور ضغط حفظ.'),
                   ]),
                 ]),
               ]),
               span(classes: 'text-xs font-mono bg-sky-100 text-sky-800 font-bold px-3 py-1 rounded-lg shrink-0', [
-                Component.text('Auto-Create on Save'),
+                Component.text('Root Collection: products'),
               ]),
             ],
           ),
 
-        // 2. Loading Notification banner
-        if (isLoading)
-          div(
-            classes:
-                'p-4 bg-indigo-50 border border-indigo-200 rounded-2xl flex items-center justify-between text-indigo-900 shadow-sm animate-pulse',
-            [
-              div(classes: 'flex items-center gap-3', [
-                span(classes: 'w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin', []),
-                div([
-                  p(classes: 'font-bold font-label-md', [Component.text('جارٍ الاتصال بقاعدة بيانات Firebase Firestore...')]),
-                  p(classes: 'text-xs text-indigo-700', [
-                    Component.text('المشروع: "$configProjectId" | المجموعة المستهدفة: "/$targetCollection"'),
-                  ]),
-                ]),
-              ]),
-            ],
-          ),
-
-        // 3. Success Notification banner
+        // Success Notification Banner
         if (isSaved)
           div(
             classes:
@@ -308,32 +388,20 @@ class _AddProductPageState extends State<AddProductPage> {
                 ]),
                 div([
                   h3(classes: 'font-bold text-base text-emerald-950 flex items-center gap-2', [
-                    if (isNewCollectionCreated)
-                      Component.text('🎉 تم إنشاء مجموعة "$targetCollection" بنجاح وإضافة المنتج إليها في قاعدة بيانات $configProjectId!')
-                    else
-                      Component.text('✅ تم حفظ المنتج بنجاح في مجموعة "$targetCollection" بمشروع $configProjectId!'),
+                    Component.text('✅ تم حفظ المنتج بنجاح في مجموعة /$targetCollection بمشروع $configProjectId!'),
                   ]),
                   div(classes: 'text-xs text-emerald-800 mt-1 flex flex-wrap items-center gap-3', [
                     span([
-                      Component.text('المشروع: '),
-                      strong([Component.text(configProjectId)]),
-                    ]),
-                    span([
-                      Component.text('المجموعة: '),
-                      strong([Component.text('/$targetCollection')]),
-                    ]),
-                    if (savedDocId != null) ...[
-                      span([
-                        Component.text('معرّف المستند (Doc ID): '),
-                        code(classes: 'bg-emerald-100 px-2 py-0.5 rounded font-mono text-[11px] font-bold text-emerald-900', [
-                          Component.text(savedDocId!),
-                        ]),
+                      Component.text('معرف المستند (ID): '),
+                      code(classes: 'bg-emerald-100 px-2 py-0.5 rounded font-mono text-[11px] font-bold text-emerald-900', [
+                        Component.text(savedDocId ?? 'new_doc'),
                       ]),
-                    ],
-                  ]),
-                  p(classes: 'text-[11px] text-emerald-700 font-semibold mt-1.5 flex items-center gap-1', [
-                    span(classes: 'material-symbols-outlined text-[14px]', [Component.text('refresh')]),
-                    Component.text('ملاحظة: افتح Firebase Console واضغط Refresh (F5) لتظهر لك مجموعة $targetCollection والمستند فوراً في الشجرة.'),
+                    ]),
+                    span([Component.text('القسم: '), strong([Component.text(topTab)])]),
+                    span([Component.text('التصنيف: '), strong([Component.text(categoryId)])]),
+                    span([Component.text('السعر: '), strong([Component.text('$price ر.س')])]),
+                    if (salePrice.isNotEmpty && salePrice != '0')
+                      span([Component.text('سعر التخفيض: '), strong([Component.text('$salePrice ر.س')])]),
                   ]),
                 ]),
               ]),
@@ -355,7 +423,7 @@ class _AddProductPageState extends State<AddProductPage> {
                   ],
                 ),
                 button(
-                  classes: 'text-emerald-700 hover:text-emerald-900 p-1',
+                  classes: 'text-emerald-700 hover:text-emerald-900 p-1 cursor-pointer',
                   events: {'click': (e) => setState(() => isSaved = false)},
                   [span(classes: 'material-symbols-outlined text-[20px]', [Component.text('close')])],
                 ),
@@ -363,8 +431,8 @@ class _AddProductPageState extends State<AddProductPage> {
             ],
           ),
 
-        // 4. Error Notification banner (Explicit message when product not added / not found)
-        if (errorMessage != null)
+        // Error Banner
+        if (errorMessage != null && validationErrors.isEmpty)
           div(
             classes:
                 'p-5 bg-red-50 border-2 border-red-300 rounded-2xl space-y-3 text-red-950 shadow-md animate-fade-in',
@@ -376,7 +444,7 @@ class _AddProductPageState extends State<AddProductPage> {
                   ]),
                   div([
                     h3(classes: 'font-bold text-base text-red-950', [
-                      Component.text('⚠️ لم يتم العثور على المنتج في قاعدة البيانات (فشل الحفظ في مجموعة $targetCollection)'),
+                      Component.text('تعذر حفظ المنتج في Firestore (مجموعة $targetCollection)'),
                     ]),
                     p(classes: 'text-xs text-red-800 font-mono mt-1 bg-red-100/70 p-2 rounded-lg', [
                       Component.text('رسالة الخطأ: $errorMessage'),
@@ -385,123 +453,19 @@ class _AddProductPageState extends State<AddProductPage> {
                   ]),
                 ]),
                 button(
-                  classes: 'text-red-700 hover:text-red-900 p-1',
+                  classes: 'text-red-700 hover:text-red-900 p-1 cursor-pointer',
                   events: {'click': (e) => setState(() => errorMessage = null)},
                   [span(classes: 'material-symbols-outlined text-[20px]', [Component.text('close')])],
                 ),
-              ]),
-
-              // Diagnostic Checklist to solve the issue
-              div(classes: 'bg-white p-3.5 rounded-xl border border-red-200 text-xs space-y-2', [
-                p(classes: 'font-bold text-red-900', [
-                  Component.text('أسباب عدم ظهور المنتج في Firebase Console وحلولها:'),
-                ]),
-                ul(classes: 'list-disc list-inside space-y-1 text-on-surface-variant', [
-                  li([
-                    Component.text('اسم المشروع: تأكد أنك تستخدم '),
-                    strong([Component.text('lipsak')]),
-                    Component.text(' (كما في شاشتك).'),
-                  ]),
-                  li([
-                    Component.text('مفتاح Web API Key: لم يتم تعيين مفتاح الـ API بعد. احصل عليه من '),
-                    strong([Component.text('Firebase Console > Project settings (⚙️) > General > Your apps')]),
-                    Component.text(' وضعه في إعدادات الربط أدناه.'),
-                  ]),
-                  li([
-                    Component.text('قواعد أمان Firestore: تأكد من السماح بالكتابة في تبويب '),
-                    strong([Component.text('Firestore Database > Rules')]),
-                    Component.text(' بكتابة '),
-                    code(classes: 'bg-surface-container px-1 py-0.5 rounded text-primary', [
-                      Component.text('allow read, write: if true;'),
-                    ]),
-                  ]),
-                ]),
-                div(classes: 'pt-2 flex items-center gap-2', [
-                  button(
-                    classes: 'px-4 py-2 bg-primary hover:bg-primary-container text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer',
-                    events: {'click': (e) => setState(() => showConfigModal = true)},
-                    [
-                      span(classes: 'material-symbols-outlined text-[16px]', [Component.text('settings')]),
-                      Component.text('إدخال مفتاح الـ Web API Key وحفظ الإعدادات'),
-                    ],
-                  ),
-                  button(
-                    classes: 'px-4 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg text-xs font-bold transition-all cursor-pointer',
-                    events: {'click': (e) => _saveProduct(publish: true)},
-                    [
-                      span(classes: 'material-symbols-outlined text-[16px]', [Component.text('refresh')]),
-                      Component.text('إعادة المحاولة الآن'),
-                    ],
-                  ),
-                ]),
               ]),
             ],
           ),
 
         // Main Two-Column Layout (Form Body)
         div(classes: 'grid grid-cols-1 lg:grid-cols-3 gap-space-xl items-start', [
-          // Left Column (Wide, 2/3): Main Content & Media
+          // Left Column (Wide, 2/3): Core Product Details & Media
           div(classes: 'lg:col-span-2 space-y-space-xl', [
-            // 1. Media & Images Upload Box
-            div(
-              classes:
-                  'bg-surface-container-lowest p-space-lg rounded-2xl border border-surface-container-high/40 shadow-sm space-y-4',
-              [
-                div(classes: 'flex items-center justify-between', [
-                  div(classes: 'flex items-center gap-2', [
-                    span(classes: 'material-symbols-outlined text-primary text-[22px]', [Component.text('photo_library')]),
-                    h2(classes: 'font-headline-sm text-headline-sm font-bold text-on-surface', [
-                      Component.text('صور ووسائط المنتج'),
-                    ]),
-                  ]),
-                  span(classes: 'text-xs bg-primary-fixed/60 text-primary font-bold px-2 py-0.5 rounded-full', [
-                    Component.text('Firebase Storage / Cloud'),
-                  ]),
-                ]),
-
-                // Image URL input
-                div([
-                  label(classes: 'block font-label-md text-label-md font-semibold text-on-surface mb-1.5', [
-                    Component.text('رابط صورة المنتج (Image / Thumbnail URL)'),
-                  ]),
-                  input(
-                    id: 'input-image-url',
-                    classes:
-                        'w-full h-11 px-4 rounded-xl border border-outline-variant/60 bg-surface text-on-surface font-mono text-xs focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all',
-                    type: InputType.text,
-                    value: imageUrl,
-                    attributes: {
-                      'dir': 'ltr',
-                      'placeholder': 'https://example.com/image.png',
-                    },
-                  ),
-                ]),
-
-                // Thumbnails Gallery
-                div(classes: 'flex flex-wrap items-center gap-3 pt-1', [
-                  // Image 1 (Main)
-                  div(
-                    classes:
-                        'relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-primary group shadow-sm bg-surface-container',
-                    [
-                      img(
-                        id: 'img-preview',
-                        classes: 'w-full h-full object-cover',
-                        src: imageUrl,
-                        alt: 'صورة المنتج الرئيسية',
-                      ),
-                      span(
-                        classes:
-                            'absolute top-1.5 right-1.5 bg-primary text-on-primary text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm',
-                        [Component.text('الرئيسية')],
-                      ),
-                    ],
-                  ),
-                ]),
-              ],
-            ),
-
-            // 2. Basic Information Form Card
+            // 1. Basic Information Form Card
             div(
               classes:
                   'bg-surface-container-lowest p-space-lg rounded-2xl border border-surface-container-high/40 shadow-sm space-y-4',
@@ -514,120 +478,63 @@ class _AddProductPageState extends State<AddProductPage> {
                 ]),
 
                 div(classes: 'space-y-4', [
-                  // Name AR
+                  // Title (Required)
                   div([
                     label(classes: 'block font-label-md text-label-md font-semibold text-on-surface mb-1.5', [
-                      Component.text('اسم المنتج باللغة العربية (Name / Title) *'),
+                      Component.text('اسم المنتج (title) *'),
                     ]),
                     input(
-                      id: 'input-name-ar',
+                      id: 'input-title',
                       classes:
                           'w-full h-11 px-4 rounded-xl border border-outline-variant/60 bg-surface text-on-surface font-body-md focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all',
                       type: InputType.text,
-                      value: nameAr,
+                      value: title,
+                      events: {'input': (e) => title = (e.target as dynamic).value?.toString() ?? ''},
                       attributes: {'placeholder': 'أدخل اسم المنتج باللغة العربية'},
                     ),
-                  ]),
-
-                  // Name EN
-                  div([
-                    label(classes: 'block font-label-md text-label-md font-semibold text-on-surface mb-1.5', [
-                      Component.text('اسم المنتج باللغة الإنجليزية (Product Name EN)'),
-                    ]),
-                    input(
-                      id: 'input-name-en',
-                      classes:
-                          'w-full h-11 px-4 rounded-xl border border-outline-variant/60 bg-surface text-on-surface font-body-md text-left focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all',
-                      type: InputType.text,
-                      value: nameEn,
-                      attributes: {'dir': 'ltr', 'placeholder': 'e.g. Classic Oxford Cotton Shirt'},
-                    ),
-                  ]),
-
-                  // SKU & Barcode Grid
-                  div(classes: 'grid grid-cols-1 md:grid-cols-2 gap-4', [
-                    div([
-                      label(classes: 'block font-label-md text-label-md font-semibold text-on-surface mb-1.5', [
-                        Component.text('رمز التخزين التعريفي (SKU) *'),
-                      ]),
-                      div(classes: 'relative', [
-                        input(
-                          id: 'input-sku',
-                          classes:
-                              'w-full h-11 px-4 rounded-xl border border-outline-variant/60 bg-surface text-on-surface font-mono text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all',
-                          type: InputType.text,
-                          value: sku,
-                          attributes: {'dir': 'ltr', 'placeholder': 'SHIRT-OXF-01'},
-                        ),
-                        span(
-                          classes:
-                              'material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-outline text-[18px]',
-                          [Component.text('tag')],
-                        ),
-                      ]),
-                    ]),
-
-                    div([
-                      label(classes: 'block font-label-md text-label-md font-semibold text-on-surface mb-1.5', [
-                        Component.text('الباركود الدولي (Barcode / UPC)'),
-                      ]),
-                      div(classes: 'relative', [
-                        input(
-                          id: 'input-barcode',
-                          classes:
-                              'w-full h-11 px-4 rounded-xl border border-outline-variant/60 bg-surface text-on-surface font-mono text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all',
-                          type: InputType.text,
-                          value: barcode,
-                          attributes: {'dir': 'ltr', 'placeholder': '628100923847'},
-                        ),
-                        span(
-                          classes:
-                              'material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-outline text-[18px]',
-                          [Component.text('barcode_scanner')],
-                        ),
-                      ]),
-                    ]),
                   ]),
 
                   // Description
                   div([
                     label(classes: 'block font-label-md text-label-md font-semibold text-on-surface mb-1.5', [
-                      Component.text('الوصف التفصيلي للمنتج (Description)'),
+                      Component.text('الوصف التفصيلي (description)'),
                     ]),
                     textarea(
                       id: 'input-description',
                       classes:
                           'w-full p-3.5 rounded-xl border border-outline-variant/60 bg-surface text-on-surface font-body-md focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all',
+                      events: {'input': (e) => description = (e.target as dynamic).value?.toString() ?? ''},
                       attributes: {
-                        'rows': '4',
-                        'placeholder': 'اكتب وصفاً جذاباً يشمل تفاصيل الخامة، مميزات الاستخدام، وملاحظات المقاس...',
+                        'rows': '3',
+                        'placeholder': 'اكتب وصفاً جذاباً يشمل تفاصيل الخامة، مميزات الاستخدام...',
                       },
-                      [
-                        Component.text(description),
-                      ],
+                      [Component.text(description)],
                     ),
                   ]),
                 ]),
               ],
             ),
 
-            // 3. Pricing & Discounts Form Card
+            // 2. Pricing, Sale & Discounts Form Card
             div(
               classes:
                   'bg-surface-container-lowest p-space-lg rounded-2xl border border-surface-container-high/40 shadow-sm space-y-4',
               [
-                div(classes: 'flex items-center gap-2 pb-2 border-b border-surface-container-high/30', [
-                  span(classes: 'material-symbols-outlined text-primary text-[22px]', [Component.text('payments')]),
-                  h2(classes: 'font-headline-sm text-headline-sm font-bold text-on-surface', [
-                    Component.text('التسعير والعروض الترويجية'),
+                div(classes: 'flex items-center justify-between pb-2 border-b border-surface-container-high/30', [
+                  div(classes: 'flex items-center gap-2', [
+                    span(classes: 'material-symbols-outlined text-primary text-[22px]', [Component.text('payments')]),
+                    h2(classes: 'font-headline-sm text-headline-sm font-bold text-on-surface', [
+                      Component.text('التسعير والتخفيضات (price & salePrice)'),
+                    ]),
                   ]),
+                  span(classes: 'text-xs text-outline font-mono', [Component.text('Schema: price, salePrice, saleLabel')]),
                 ]),
 
-                div(classes: 'grid grid-cols-1 md:grid-cols-2 gap-4', [
-                  // Base Price
+                div(classes: 'grid grid-cols-1 md:grid-cols-3 gap-4', [
+                  // Base Price (price)
                   div([
                     label(classes: 'block font-label-md text-label-md font-semibold text-on-surface mb-1.5', [
-                      Component.text('السعر الأساسي الأصلي (Price) *'),
+                      Component.text('السعر الأساسي (price) *'),
                     ]),
                     div(classes: 'relative', [
                       input(
@@ -636,7 +543,11 @@ class _AddProductPageState extends State<AddProductPage> {
                             'w-full h-11 pr-4 pl-14 rounded-xl border border-outline-variant/60 bg-surface text-on-surface font-price-sm text-price-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all',
                         type: InputType.number,
                         value: price,
-                        attributes: {'placeholder': '189'},
+                        events: {'input': (e) {
+                          price = (e.target as dynamic).value?.toString() ?? '';
+                          _recalcSaleLabel();
+                        }},
+                        attributes: {'placeholder': '299', 'step': '0.5'},
                       ),
                       span(
                         classes:
@@ -646,19 +557,23 @@ class _AddProductPageState extends State<AddProductPage> {
                     ]),
                   ]),
 
-                  // Discount Price
+                  // Sale Price (salePrice)
                   div([
                     label(classes: 'block font-label-md text-label-md font-semibold text-on-surface mb-1.5', [
-                      Component.text('سعر البيع المخفض (SalePrice)'),
+                      Component.text('سعر البيع المخفض (salePrice)'),
                     ]),
                     div(classes: 'relative', [
                       input(
-                        id: 'input-discount-price',
+                        id: 'input-sale-price',
                         classes:
                             'w-full h-11 pr-4 pl-14 rounded-xl border border-outline-variant/60 bg-surface text-emerald-700 font-price-sm text-price-sm font-bold focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all',
                         type: InputType.number,
-                        value: discountPrice,
-                        attributes: {'placeholder': '149'},
+                        value: salePrice,
+                        events: {'input': (e) {
+                          salePrice = (e.target as dynamic).value?.toString() ?? '';
+                          _recalcSaleLabel();
+                        }},
+                        attributes: {'placeholder': '239', 'step': '0.5'},
                       ),
                       span(
                         classes:
@@ -667,203 +582,166 @@ class _AddProductPageState extends State<AddProductPage> {
                       ),
                     ]),
                   ]),
-                ]),
 
-                // VAT checkbox toggle card
-                div(
-                  classes:
-                      'flex items-center justify-between p-4 rounded-xl bg-surface-container-low/60 border border-surface-container-high/60',
-                  [
-                    div([
-                      p(classes: 'font-label-md text-label-md font-bold text-on-surface', [
-                        Component.text('احتساب ضريبة القيمة المضافة (15% VAT)'),
-                      ]),
-                      p(classes: 'text-xs text-outline mt-0.5', [
-                        Component.text('السعر المعروض للعملاء في متجر نبض يشمل ضريبة القيمة المضافة طبقاً للأنظمة.'),
-                      ]),
+                  // Sale Label (saleLabel)
+                  div([
+                    label(classes: 'block font-label-md text-label-md font-semibold text-on-surface mb-1.5', [
+                      Component.text('ملصق التخفيض (saleLabel)'),
                     ]),
                     input(
-                      classes: 'w-5 h-5 rounded text-primary focus:ring-primary cursor-pointer',
-                      type: InputType.checkbox,
-                      checked: isTaxIncluded,
+                      id: 'input-sale-label',
+                      classes:
+                          'w-full h-11 px-4 rounded-xl border border-outline-variant/60 bg-surface text-on-surface font-body-md focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all',
+                      type: InputType.text,
+                      value: saleLabel,
+                      events: {'input': (e) => saleLabel = (e.target as dynamic).value?.toString() ?? ''},
+                      attributes: {'placeholder': 'e.g. خصم 20%'},
                     ),
-                  ],
-                ),
+                  ]),
+                ]),
               ],
             ),
 
-            // 4. Variants: Sizes & Colors
+            // 3. Media & Images Upload Box (thumbnail & images)
             div(
               classes:
                   'bg-surface-container-lowest p-space-lg rounded-2xl border border-surface-container-high/40 shadow-sm space-y-4',
               [
-                div(classes: 'flex items-center gap-2 pb-2 border-b border-surface-container-high/30', [
-                  span(classes: 'material-symbols-outlined text-primary text-[22px]', [Component.text('tune')]),
-                  h2(classes: 'font-headline-sm text-headline-sm font-bold text-on-surface', [
-                    Component.text('المتغيرات والخيارات (المقاسات والألوان)'),
+                div(classes: 'flex items-center justify-between pb-2 border-b border-surface-container-high/30', [
+                  div(classes: 'flex items-center gap-2', [
+                    span(classes: 'material-symbols-outlined text-primary text-[22px]', [Component.text('photo_library')]),
+                    h2(classes: 'font-headline-sm text-headline-sm font-bold text-on-surface', [
+                      Component.text('صور المنتج (thumbnail & images)'),
+                    ]),
                   ]),
+                  span(classes: 'text-xs text-outline font-mono', [Component.text('List<String> images')]),
                 ]),
 
-                // Sizes
-                div(classes: 'space-y-2', [
-                  label(classes: 'block font-label-md text-label-md font-semibold text-on-surface', [
-                    Component.text('المقاسات المتاحة لهذا المنتج'),
+                // Thumbnail URL
+                div([
+                  label(classes: 'block font-label-md text-label-md font-semibold text-on-surface mb-1.5', [
+                    Component.text('رابط الصورة الرئيسية للمنتج (thumbnail) *'),
                   ]),
-                  div(classes: 'flex flex-wrap items-center gap-2', [
-                    for (final s in sizes)
-                      span(
-                        classes:
-                            'h-10 px-4 rounded-xl ${selectedSizes.contains(s) ? "bg-primary text-on-primary font-bold shadow-sm" : "bg-surface-container text-on-surface border border-surface-container-high"} text-xs flex items-center gap-2 cursor-pointer transition-all',
-                        [
-                          Component.text(s),
-                          span(classes: 'material-symbols-outlined text-[14px] hover:opacity-75', [Component.text('check')]),
-                        ],
-                      ),
-                  ]),
+                  input(
+                    id: 'input-thumbnail',
+                    classes:
+                        'w-full h-11 px-4 rounded-xl border border-outline-variant/60 bg-surface text-on-surface font-mono text-xs focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all',
+                    type: InputType.text,
+                    value: thumbnail,
+                    events: {'input': (e) => setState(() => thumbnail = (e.target as dynamic).value?.toString() ?? '')},
+                    attributes: {
+                      'dir': 'ltr',
+                      'placeholder': 'https://example.com/thumbnail.png',
+                    },
+                  ),
                 ]),
 
-                // Colors
-                div(classes: 'space-y-2 pt-2', [
-                  label(classes: 'block font-label-md text-label-md font-semibold text-on-surface', [
-                    Component.text('الألوان المتوفرة'),
+                // Gallery Extra Image
+                div([
+                  label(classes: 'block font-label-md text-label-md font-semibold text-on-surface mb-1.5', [
+                    Component.text('صورة إضافية لمعرض الصور (gallery image)'),
                   ]),
-                  div(classes: 'flex items-center gap-3', [
-                    for (final c in colors)
-                      div(
-                        classes:
-                            'w-9 h-9 rounded-full ${c['bg']} ${selectedColor == c['name'] ? "ring-2 ring-primary ring-offset-2 scale-110" : "border border-outline-variant/60"} cursor-pointer flex items-center justify-center transition-all shadow-sm',
-                        attributes: {'title': c['name']!},
-                        events: {'click': (e) => setState(() => selectedColor = c['name']!)},
-                        [
-                          if (selectedColor == c['name'])
-                            span(
-                              classes:
-                                  'material-symbols-outlined text-[18px] ${c['name'] == 'أبيض' ? 'text-black' : 'text-white'}',
-                              [Component.text('check')],
-                            ),
-                        ],
-                      ),
-                  ]),
+                  input(
+                    id: 'input-gallery-1',
+                    classes:
+                        'w-full h-11 px-4 rounded-xl border border-outline-variant/60 bg-surface text-on-surface font-mono text-xs focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all',
+                    type: InputType.text,
+                    value: galleryImage1,
+                    events: {'input': (e) => setState(() => galleryImage1 = (e.target as dynamic).value?.toString() ?? '')},
+                    attributes: {
+                      'dir': 'ltr',
+                      'placeholder': 'https://example.com/gallery1.png',
+                    },
+                  ),
+                ]),
+
+                // Thumbnails Gallery Preview
+                div(classes: 'flex flex-wrap items-center gap-4 pt-2', [
+                  if (thumbnail.isNotEmpty)
+                    div(classes: 'relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-primary shadow-sm bg-surface-container', [
+                      img(classes: 'w-full h-full object-cover', src: thumbnail, alt: 'صورة الغلاف'),
+                      span(classes: 'absolute top-1.5 right-1.5 bg-primary text-on-primary text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm', [
+                        Component.text('thumbnail'),
+                      ]),
+                    ]),
+                  if (galleryImage1.isNotEmpty)
+                    div(classes: 'relative w-24 h-24 rounded-2xl overflow-hidden border border-outline-variant/60 shadow-sm bg-surface-container', [
+                      img(classes: 'w-full h-full object-cover', src: galleryImage1, alt: 'صورة إضافية'),
+                      span(classes: 'absolute top-1.5 right-1.5 bg-black/70 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold', [
+                        Component.text('معرض'),
+                      ]),
+                    ]),
                 ]),
               ],
             ),
           ]),
 
-          // Right Column (Sidebar style, 1/3): Status, Category & Inventory & Firebase Card
+          // Right Column (Sidebar style, 1/3): Categorization, Stock, Store & Vendor
           div(classes: 'space-y-space-xl', [
-            // 1. Firebase Cloud Sync Card (Enhanced with Target Collection)
-            div(
-              classes:
-                  'bg-gradient-to-br from-surface-container-lowest to-surface-container-low p-space-lg rounded-2xl border-2 border-primary/20 shadow-md space-y-4',
-              [
-                div(classes: 'flex items-center justify-between', [
-                  div(classes: 'flex items-center gap-2', [
-                    span(classes: 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping', []),
-                    span(classes: 'font-label-md text-label-md font-bold text-on-surface', [
-                      Component.text('مشروع Firebase: '),
-                      span(classes: 'text-primary font-mono', [Component.text(configProjectId)]),
-                    ]),
-                  ]),
-                  span(classes: 'text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md flex items-center gap-1', [
-                    span(classes: 'material-symbols-outlined text-[12px]', [Component.text('cloud_done')]),
-                    Component.text('Firestore Live'),
-                  ]),
-                ]),
-
-                div(classes: 'space-y-2 text-xs text-outline bg-surface-container-lowest/90 p-3.5 rounded-xl border border-surface-container-high/60', [
-                  div(classes: 'flex justify-between items-center', [
-                    Component.text('المجموعة (Collection):'),
-                    span(classes: 'font-mono text-primary font-bold bg-primary-fixed/40 px-2 py-0.5 rounded', [
-                      Component.text('/$targetCollection'),
-                    ]),
-                  ]),
-                  div(classes: 'flex justify-between items-center', [
-                    Component.text('حالة المجموعة بالـ DB:'),
-                    if (isCheckingCollection)
-                      span(classes: 'text-outline', [Component.text('جارٍ الفحص...')])
-                    else if (collectionAlreadyExists == true)
-                      span(classes: 'text-emerald-600 font-bold flex items-center gap-1', [
-                        span(classes: 'material-symbols-outlined text-[13px]', [Component.text('check_circle')]),
-                        Component.text('موجودة وبها مستندات'),
-                      ])
-                    else
-                      span(classes: 'text-amber-600 font-bold flex items-center gap-1', [
-                        span(classes: 'material-symbols-outlined text-[13px]', [Component.text('info')]),
-                        Component.text('ستُنشأ تلقائياً عند الحفظ'),
-                      ]),
-                  ]),
-                  div(classes: 'flex justify-between items-center', [
-                    Component.text('المجموعات الشقيقة:'),
-                    span(classes: 'font-mono text-on-surface-variant text-[11px]', [
-                      Component.text('Banners, Categories, Users'),
-                    ]),
-                  ]),
-                ]),
-
-                // Target collection chooser
-                div([
-                  label(classes: 'block text-xs font-semibold text-on-surface mb-1', [
-                    Component.text('اسم مجموعة الحفظ في Firestore:'),
-                  ]),
-                  div(classes: 'flex gap-2', [
-                    button(
-                      classes:
-                          'flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all border ${targetCollection == "Products" ? "bg-primary text-white border-primary shadow-sm" : "bg-surface-container border-surface-container-high text-on-surface"}',
-                      events: {'click': (e) {
-                        setState(() => targetCollection = 'Products');
-                        _checkTargetCollection();
-                      }},
-                      [Component.text('Products (موصى بها)')],
-                    ),
-                    button(
-                      classes:
-                          'flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all border ${targetCollection == "products" ? "bg-primary text-white border-primary shadow-sm" : "bg-surface-container border-surface-container-high text-on-surface"}',
-                      events: {'click': (e) {
-                        setState(() => targetCollection = 'products');
-                        _checkTargetCollection();
-                      }},
-                      [Component.text('products')],
-                    ),
-                  ]),
-                ]),
-
-                button(
-                  classes:
-                      'w-full py-2 px-3 rounded-xl border border-primary/30 hover:border-primary bg-primary/5 hover:bg-primary/10 text-primary text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer',
-                  events: {'click': (e) => setState(() => showConfigModal = true)},
-                  [
-                    span(classes: 'material-symbols-outlined text-[16px]', [Component.text('tune')]),
-                    Component.text('إعدادات ربط Firebase (API Key / Project)'),
-                  ],
-                ),
-              ],
-            ),
-
-            // 2. Category Selection (Matches categories from screenshot: cat_men_shirts, etc.)
+            // 1. Context-First Categorization (topTab & categoryId)
             div(
               classes:
                   'bg-surface-container-lowest p-space-lg rounded-2xl border border-surface-container-high/40 shadow-sm space-y-4',
               [
-                h3(classes: 'font-headline-sm text-headline-sm font-bold text-on-surface flex items-center gap-2', [
+                h3(classes: 'font-headline-sm text-headline-sm font-bold text-on-surface flex items-center gap-2 pb-2 border-b border-surface-container-high/30', [
                   span(classes: 'material-symbols-outlined text-primary text-[20px]', [Component.text('category')]),
-                  Component.text('القسم والماركة (Categories)'),
+                  Component.text('التصنيف والأقسام (topTab & categoryId)'),
                 ]),
 
-                // Category Select
+                // TopTab Dropdown (Main Department)
                 div([
                   label(classes: 'block font-label-md text-label-md font-semibold text-on-surface mb-1.5', [
-                    Component.text('القسم من مجموعة Categories في Firebase *'),
+                    Component.text('القسم الرئيسي (topTab) *'),
                   ]),
                   div(classes: 'relative', [
                     select(
-                      id: 'input-category',
+                      id: 'input-top-tab',
+                      classes:
+                          'w-full h-11 pr-3 pl-9 rounded-xl border border-outline-variant/60 bg-surface text-on-surface text-body-md focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer appearance-none font-bold',
+                      events: {'change': (e) {
+                        final val = (e.target as dynamic).value?.toString() ?? 'women';
+                        _onDepartmentChanged(val);
+                      }},
+                      [
+                        for (final entry in departmentOptions.entries)
+                          option(
+                            value: entry.key,
+                            selected: topTab == entry.key,
+                            [Component.text(entry.value)],
+                          ),
+                      ],
+                    ),
+                    span(
+                      classes:
+                          'material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[20px]',
+                      [Component.text('expand_more')],
+                    ),
+                  ]),
+                  p(classes: 'text-[11px] text-outline mt-1', [
+                    Component.text('القسم الأساسي (Context-First): women, men, kids'),
+                  ]),
+                ]),
+
+                // CategoryId Dropdown (Sub-category dynamically linked to topTab)
+                div([
+                  label(classes: 'block font-label-md text-label-md font-semibold text-on-surface mb-1.5', [
+                    Component.text('التصنيف الفرعي (categoryId) *'),
+                  ]),
+                  div(classes: 'relative', [
+                    select(
+                      id: 'input-category-id',
                       classes:
                           'w-full h-11 pr-3 pl-9 rounded-xl border border-outline-variant/60 bg-surface text-on-surface text-body-md focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer appearance-none',
+                      events: {'change': (e) {
+                        setState(() {
+                          categoryId = (e.target as dynamic).value?.toString() ?? '';
+                        });
+                      }},
                       [
-                        for (final c in storeCategories)
+                        for (final c in currentSubCategories)
                           option(
                             value: c['id']!,
-                            selected: category == c['id'],
+                            selected: categoryId == c['id'],
                             [Component.text(c['name']!)],
                           ),
                       ],
@@ -875,51 +753,26 @@ class _AddProductPageState extends State<AddProductPage> {
                     ),
                   ]),
                   p(classes: 'text-[11px] text-outline mt-1', [
-                    Component.text('يتطابق مع مستندات Categories في Firebase: cat_men_shirts, cat_men...'),
-                  ]),
-                ]),
-
-                // Brand Select
-                div([
-                  label(classes: 'block font-label-md text-label-md font-semibold text-on-surface mb-1.5', [
-                    Component.text('الماركة التجارية (Brand)'),
-                  ]),
-                  div(classes: 'relative', [
-                    select(
-                      id: 'input-brand',
-                      classes:
-                          'w-full h-11 pr-3 pl-9 rounded-xl border border-outline-variant/60 bg-surface text-on-surface text-body-md focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer appearance-none',
-                      [
-                        option(value: 'Zara', selected: brand == 'Zara', [Component.text('Zara')]),
-                        option(value: 'Nike', selected: brand == 'Nike', [Component.text('Nike')]),
-                        option(value: 'Adidas', selected: brand == 'Adidas', [Component.text('Adidas')]),
-                        option(value: 'Puma', selected: brand == 'Puma', [Component.text('Puma')]),
-                        option(value: 'Apple', selected: brand == 'Apple', [Component.text('Apple')]),
-                      ],
-                    ),
-                    span(
-                      classes:
-                          'material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[20px]',
-                      [Component.text('expand_more')],
-                    ),
+                    Component.text('معرف التصنيف الدقيق للفلترة، مثل women_dresses أو men_shirts'),
                   ]),
                 ]),
               ],
             ),
 
-            // 3. Inventory & Low-Stock Alerts Card
+            // 2. Inventory Management (stock)
             div(
               classes:
                   'bg-surface-container-lowest p-space-lg rounded-2xl border border-surface-container-high/40 shadow-sm space-y-4',
               [
-                h3(classes: 'font-headline-sm text-headline-sm font-bold text-on-surface flex items-center gap-2', [
+                h3(classes: 'font-headline-sm text-headline-sm font-bold text-on-surface flex items-center gap-2 pb-2 border-b border-surface-container-high/30', [
                   span(classes: 'material-symbols-outlined text-primary text-[20px]', [Component.text('inventory')]),
-                  Component.text('إدارة المخزون (Stock)'),
+                  Component.text('المخزون والحالة (stock & status)'),
                 ]),
 
+                // Stock input
                 div([
                   label(classes: 'block font-label-md text-label-md font-semibold text-on-surface mb-1.5', [
-                    Component.text('الكمية الإجمالية بالمستودع *'),
+                    Component.text('الكمية المتوفرة بالمخزون (stock) *'),
                   ]),
                   input(
                     id: 'input-stock',
@@ -927,22 +780,93 @@ class _AddProductPageState extends State<AddProductPage> {
                         'w-full h-11 px-4 rounded-xl border border-outline-variant/60 bg-surface text-on-surface font-body-md focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all',
                     type: InputType.number,
                     value: stock,
-                    attributes: {'placeholder': '35'},
+                    events: {'input': (e) => stock = (e.target as dynamic).value?.toString() ?? '0'},
+                    attributes: {'placeholder': '25'},
                   ),
                 ]),
 
-                div([
-                  label(classes: 'block font-label-md text-label-md font-semibold text-on-surface mb-1.5', [
-                    Component.text('حد التنبيه بانخفاض المخزون'),
+                // Active Switch
+                div(classes: 'flex items-center justify-between pt-2 border-t border-surface-container-high/30', [
+                  div([
+                    p(classes: 'font-label-md text-label-md font-bold text-on-surface', [
+                      Component.text('منتج نشط بالمتجر (isActive)'),
+                    ]),
+                    p(classes: 'text-xs text-outline', [Component.text('يظهر فوراً للمتسوقين في التطبيق')]),
                   ]),
                   input(
-                    id: 'input-low-stock',
-                    classes:
-                        'w-full h-11 px-4 rounded-xl border border-outline-variant/60 bg-surface text-on-surface font-body-md focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all',
-                    type: InputType.number,
-                    value: lowStockThreshold,
-                    attributes: {'placeholder': '5'},
+                    classes: 'w-5 h-5 rounded text-primary focus:ring-primary cursor-pointer',
+                    type: InputType.checkbox,
+                    checked: isActive,
+                    events: {'change': (e) => setState(() => isActive = (e.target as dynamic).checked == true)},
                   ),
+                ]),
+
+                // Featured Switch
+                div(classes: 'flex items-center justify-between pt-2 border-t border-surface-container-high/30', [
+                  div([
+                    p(classes: 'font-label-md text-label-md font-bold text-on-surface', [
+                      Component.text('منتج مميز (isFeatured)'),
+                    ]),
+                    p(classes: 'text-xs text-outline', [Component.text('يظهر في أقسام المنتجات المميزة بالصفحة الرئيسية')]),
+                  ]),
+                  input(
+                    classes: 'w-5 h-5 rounded text-primary focus:ring-primary cursor-pointer',
+                    type: InputType.checkbox,
+                    checked: isFeatured,
+                    events: {'change': (e) => setState(() => isFeatured = (e.target as dynamic).checked == true)},
+                  ),
+                ]),
+              ],
+            ),
+
+            // 3. Store & Vendor Identity
+            div(
+              classes:
+                  'bg-surface-container-lowest p-space-lg rounded-2xl border border-surface-container-high/40 shadow-sm space-y-4',
+              [
+                h3(classes: 'font-headline-sm text-headline-sm font-bold text-on-surface flex items-center gap-2 pb-2 border-b border-surface-container-high/30', [
+                  span(classes: 'material-symbols-outlined text-primary text-[20px]', [Component.text('store')]),
+                  Component.text('بيانات المتجر والتاجر (storeId & vendorId)'),
+                ]),
+
+                // StoreId
+                div([
+                  label(classes: 'block font-label-md text-label-md font-semibold text-on-surface mb-1.5', [
+                    Component.text('معرف المتجر (storeId) *'),
+                  ]),
+                  input(
+                    id: 'input-store-id',
+                    classes:
+                        'w-full h-11 px-4 rounded-xl border border-outline-variant/60 bg-surface font-mono text-xs focus:border-primary outline-none',
+                    type: InputType.text,
+                    value: storeId,
+                    events: {'input': (e) => storeId = (e.target as dynamic).value?.toString() ?? ''},
+                    attributes: {'dir': 'ltr'},
+                  ),
+                ]),
+
+                // VendorId
+                div([
+                  label(classes: 'block font-label-md text-label-md font-semibold text-on-surface mb-1.5', [
+                    Component.text('معرف التاجر (vendorId) *'),
+                  ]),
+                  input(
+                    id: 'input-vendor-id',
+                    classes:
+                        'w-full h-11 px-4 rounded-xl border border-outline-variant/60 bg-surface font-mono text-xs focus:border-primary outline-none',
+                    type: InputType.text,
+                    value: vendorId,
+                    events: {'input': (e) => vendorId = (e.target as dynamic).value?.toString() ?? ''},
+                    attributes: {'dir': 'ltr'},
+                  ),
+                ]),
+
+                // Target collection indicator
+                div(classes: 'pt-2 border-t border-surface-container-high/30 flex items-center justify-between text-xs text-outline', [
+                  Component.text('المجموعة المستهدفة:'),
+                  span(classes: 'font-mono text-primary font-bold bg-primary-fixed/40 px-2 py-0.5 rounded', [
+                    Component.text('/$targetCollection'),
+                  ]),
                 ]),
               ],
             ),
@@ -962,7 +886,7 @@ class _AddProductPageState extends State<AddProductPage> {
                   div(classes: 'flex items-center justify-between pb-3 border-b border-surface-container-high/60', [
                     div(classes: 'flex items-center gap-2.5', [
                       span(classes: 'material-symbols-outlined text-primary text-2xl', [Component.text('settings')]),
-                      h3(classes: 'font-bold text-lg text-on-surface', [Component.text('إعدادات ربط Firebase (مشروع lipsak)')]),
+                      h3(classes: 'font-bold text-lg text-on-surface', [Component.text('إعدادات ربط Firebase')]),
                     ]),
                     button(
                       classes: 'text-outline hover:text-on-surface p-1 cursor-pointer',
@@ -981,27 +905,23 @@ class _AddProductPageState extends State<AddProductPage> {
                             'w-full h-10 px-3 rounded-xl border border-outline-variant/60 bg-surface font-mono text-xs text-left focus:border-primary outline-none',
                         type: InputType.text,
                         value: configProjectId,
+                        events: {'input': (e) => configProjectId = (e.target as dynamic).value?.toString() ?? ''},
                         attributes: {'dir': 'ltr'},
                       ),
-                      p(classes: 'text-[11px] text-outline mt-0.5', [
-                        Component.text('اسم مشروعك في Firebase هو lipsak (طبقاً لصورة الكونسول)'),
-                      ]),
                     ]),
 
                     div([
                       label(classes: 'block font-semibold text-xs text-on-surface mb-1', [
-                        Component.text('Web API Key (من Firebase Console) *'),
+                        Component.text('Web API Key *'),
                       ]),
                       input(
                         classes:
                             'w-full h-10 px-3 rounded-xl border border-outline-variant/60 bg-surface font-mono text-xs text-left focus:border-primary outline-none',
                         type: InputType.text,
                         value: configApiKey,
+                        events: {'input': (e) => configApiKey = (e.target as dynamic).value?.toString() ?? ''},
                         attributes: {'dir': 'ltr', 'placeholder': 'AIzaSy...'},
                       ),
-                      p(classes: 'text-[11px] text-outline mt-0.5', [
-                        Component.text('افتح Firebase Console > Project settings (⚙️) > General > انسخ Web API Key'),
-                      ]),
                     ]),
 
                     div([
@@ -1013,6 +933,7 @@ class _AddProductPageState extends State<AddProductPage> {
                             'w-full h-10 px-3 rounded-xl border border-outline-variant/60 bg-surface font-mono text-xs text-left focus:border-primary outline-none',
                         type: InputType.text,
                         value: configAuthDomain,
+                        events: {'input': (e) => configAuthDomain = (e.target as dynamic).value?.toString() ?? ''},
                         attributes: {'dir': 'ltr'},
                       ),
                     ]),
@@ -1027,7 +948,7 @@ class _AddProductPageState extends State<AddProductPage> {
                     button(
                       classes: 'px-5 py-2 rounded-xl bg-primary hover:bg-primary-container text-white text-xs font-bold shadow-sm cursor-pointer',
                       events: {'click': (e) => _saveConfig()},
-                      [Component.text('حفظ الإعدادات والتفعيل')],
+                      [Component.text('حفظ الإعدادات')],
                     ),
                   ]),
                 ],

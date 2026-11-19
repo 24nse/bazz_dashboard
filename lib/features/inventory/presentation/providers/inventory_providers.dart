@@ -3,28 +3,76 @@ import 'package:jaspr_riverpod/jaspr_riverpod.dart';
 import '../../data/models/product_model.dart';
 import '../../data/repositories/inventory_repository.dart';
 
+/// Active vendor store filter provider. Null or empty means fetch all store products.
+final selectedStoreIdProvider = StateProvider<String?>((ref) => null);
+
 /// StateNotifier managing asynchronous fetching, caching, and refreshing of products.
 class ProductsNotifier extends AsyncNotifier<List<ProductModel>> {
   @override
   FutureOr<List<ProductModel>> build() async {
-    return _fetchProducts();
+    final storeId = ref.watch(selectedStoreIdProvider);
+    return _fetchProducts(storeId: storeId);
   }
 
-  Future<List<ProductModel>> _fetchProducts() async {
+  Future<List<ProductModel>> _fetchProducts({String? storeId}) async {
     final repo = ref.read(inventoryRepositoryProvider);
-    return await repo.fetchProducts();
+    return await repo.fetchProducts(storeId: storeId);
   }
 
   /// Manually triggers a reload of the products list with loading state.
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() => _fetchProducts());
+    final storeId = ref.read(selectedStoreIdProvider);
+    state = await AsyncValue.guard(() => _fetchProducts(storeId: storeId));
   }
 
-  /// Add a product and automatically refresh state.
+  /// Add a product to Firestore root collection 'products' and automatically refresh state.
   Future<bool> addProduct(ProductModel product) async {
     final repo = ref.read(inventoryRepositoryProvider);
     final result = await repo.addProduct(product);
+    if (result['success'] == true) {
+      await refresh();
+      return true;
+    }
+    return false;
+  }
+
+  /// Update arbitrary fields of a product and refresh state.
+  Future<bool> updateProduct(String productId, Map<String, dynamic> updates) async {
+    final repo = ref.read(inventoryRepositoryProvider);
+    final result = await repo.updateProduct(productId, updates);
+    if (result['success'] == true) {
+      await refresh();
+      return true;
+    }
+    return false;
+  }
+
+  /// Update stock, price, and salePrice directly in Firestore.
+  Future<bool> updateInventory(
+    String productId, {
+    int? stock,
+    double? price,
+    double? salePrice,
+  }) async {
+    final repo = ref.read(inventoryRepositoryProvider);
+    final result = await repo.updateInventory(
+      productId,
+      stock: stock,
+      price: price,
+      salePrice: salePrice,
+    );
+    if (result['success'] == true) {
+      await refresh();
+      return true;
+    }
+    return false;
+  }
+
+  /// Delete a product document from Firestore 'products'.
+  Future<bool> deleteProduct(String productId) async {
+    final repo = ref.read(inventoryRepositoryProvider);
+    final result = await repo.deleteProduct(productId);
     if (result['success'] == true) {
       await refresh();
       return true;
@@ -42,7 +90,8 @@ final productsNotifierProvider =
 /// Optional Live StreamProvider for reactive background updates.
 final liveInventoryStreamProvider = StreamProvider<List<ProductModel>>((ref) {
   final repo = ref.watch(inventoryRepositoryProvider);
-  return repo.watchProducts();
+  final storeId = ref.watch(selectedStoreIdProvider);
+  return repo.watchProducts(storeId: storeId);
 });
 
 /// Search query state for local filtering.
@@ -63,7 +112,7 @@ final totalProductsCountProvider = Provider<int>((ref) {
 final activeProductsCountProvider = Provider<int>((ref) {
   final asyncState = ref.watch(productsNotifierProvider);
   return asyncState.maybeWhen(
-    data: (list) => list.where((p) => p.isPublished).length,
+    data: (list) => list.where((p) => p.isActive).length,
     orElse: () => 0,
   );
 });
