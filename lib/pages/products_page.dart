@@ -209,7 +209,7 @@ class ProductsPage extends StatelessComponent {
                       'h-11 pr-3 pl-8 rounded-full border border-surface-container-high bg-surface-container-low/50 text-on-surface text-body-sm focus:border-primary focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer',
                   events: {'change': (e) {
                     final val = (e.target as dynamic).value?.toString();
-                    context.read(selectedStoreIdProvider.notifier).state = (val == null || val.isEmpty || val == 'all') ? null : val;
+                    context.read(selectedStoreIdProvider.notifier).selectStore((val == null || val.isEmpty || val == 'all') ? null : val);
                   }},
                   [
                     option(value: 'all', selected: selectedStoreId == null, [Component.text('جميع المتاجر (All Stores)')]),

@@ -25,7 +25,7 @@ class StoreModel {
   });
 
   /// Factory constructor to map Firestore Document or Map into typed [StoreModel].
-  /// Supports DocumentSnapshot, Map<String, dynamic>, and REST API structures.
+  /// Supports DocumentSnapshot, `Map<String, dynamic>`, and REST API structures.
   factory StoreModel.fromFirestore(dynamic doc, [dynamic options]) {
     if (doc == null) {
       return StoreModel.empty();

@@ -3,8 +3,19 @@ import 'package:jaspr_riverpod/jaspr_riverpod.dart';
 import '../../data/models/product_model.dart';
 import '../../data/repositories/inventory_repository.dart';
 
+/// Notifier managing active vendor store filter state.
+class SelectedStoreIdNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void selectStore(String? storeId) {
+    state = storeId;
+  }
+}
+
 /// Active vendor store filter provider. Null or empty means fetch all store products.
-final selectedStoreIdProvider = StateProvider<String?>((ref) => null);
+final selectedStoreIdProvider =
+    NotifierProvider<SelectedStoreIdNotifier, String?>(SelectedStoreIdNotifier.new);
 
 /// StateNotifier managing asynchronous fetching, caching, and refreshing of products.
 class ProductsNotifier extends AsyncNotifier<List<ProductModel>> {

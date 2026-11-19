@@ -43,7 +43,7 @@ class ProductModel {
   });
 
   /// Factory constructor to map Firestore Document or Map into typed [ProductModel].
-  /// Supports DocumentSnapshot, Map<String, dynamic>, and REST API structures.
+  /// Supports DocumentSnapshot, `Map<String, dynamic>`, and REST API structures.
   factory ProductModel.fromFirestore(dynamic doc, [dynamic options]) {
     if (doc == null) {
       return ProductModel.empty();
