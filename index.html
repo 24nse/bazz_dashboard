@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html class="h-full" dir="rtl" lang="ar">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>لوحة التحكم الإدارية | متجر نبض</title>
+  
+  <!-- Google Fonts: Cairo, Inter & Plus Jakarta Sans -->
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap" rel="stylesheet"/>
+  
+  <!-- Material Symbols Outlined -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+  
+  <!-- Tailwind CSS v3 -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-error-container": "#93000a",
+            "on-primary": "#ffffff",
+            "outline": "#777587",
+            "inverse-on-surface": "#eef0ff",
+            "tertiary": "#960014",
+            "tertiary-fixed": "#ffdad7",
+            "on-primary-fixed-variant": "#3323cc",
+            "surface-container": "#eaedff",
+            "on-tertiary-fixed": "#410004",
+            "on-tertiary": "#ffffff",
+            "on-secondary-container": "#684000",
+            "on-tertiary-fixed-variant": "#930013",
+            "surface-container-high": "#e2e7ff",
+            "primary-fixed-dim": "#c3c0ff",
+            "inverse-surface": "#283044",
+            "surface-variant": "#dae2fd",
+            "on-secondary": "#ffffff",
+            "background": "#faf8ff",
+            "secondary": "#855300",
+            "on-tertiary-container": "#ffd0cc",
+            "outline-variant": "#c7c4d8",
+            "surface-tint": "#4d44e3",
+            "on-surface": "#131b2e",
+            "surface": "#faf8ff",
+            "primary-container": "#4f46e5",
+            "error": "#ba1a1a",
+            "surface-bright": "#faf8ff",
+            "on-primary-fixed": "#0f0069",
+            "surface-container-low": "#f2f3ff",
+            "surface-container-highest": "#dae2fd",
+            "on-secondary-fixed": "#2a1700",
+            "on-primary-container": "#dad7ff",
+            "secondary-fixed": "#ffddb8",
+            "primary-fixed": "#e2dfff",
+            "on-secondary-fixed-variant": "#653e00",
+            "surface-container-lowest": "#ffffff",
+            "surface-dim": "#d2d9f4",
+            "primary": "#3525cd",
+            "on-background": "#131b2e",
+            "on-error": "#ffffff",
+            "tertiary-fixed-dim": "#ffb3ad",
+            "error-container": "#ffdad6",
+            "secondary-fixed-dim": "#ffb95f",
+            "tertiary-container": "#bc1d25",
+            "secondary-container": "#fea619",
+            "on-surface-variant": "#464555",
+            "inverse-primary": "#c3c0ff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xl": "1.5rem",
+            "space-xs": "0.25rem",
+            "margin": "1rem",
+            "space-sm": "0.5rem",
+            "space-md": "0.75rem",
+            "gutter": "0.75rem",
+            "space-lg": "1rem"
+          },
+          "fontFamily": {
+            "body-lg": ["Cairo", "Inter", "sans-serif"],
+            "headline-lg": ["Cairo", "Plus Jakarta Sans", "sans-serif"],
+            "headline-md": ["Cairo", "Plus Jakarta Sans", "sans-serif"],
+            "label-sm": ["Cairo", "Inter", "sans-serif"],
+            "body-md": ["Cairo", "Inter", "sans-serif"],
+            "price-sm": ["Plus Jakarta Sans", "Cairo", "sans-serif"],
+            "label-md": ["Cairo", "Inter", "sans-serif"],
+            "headline-xl": ["Cairo", "Plus Jakarta Sans", "sans-serif"],
+            "label-lg": ["Cairo", "Inter", "sans-serif"],
+            "price-lg": ["Plus Jakarta Sans", "Cairo", "sans-serif"],
+            "headline-sm": ["Cairo", "Plus Jakarta Sans", "sans-serif"],
+            "body-sm": ["Cairo", "Inter", "sans-serif"]
+          },
+          "fontSize": {
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-lg": ["26px", { "lineHeight": "34px", "fontWeight": "700" }],
+            "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "700" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "price-sm": ["15px", { "lineHeight": "18px", "fontWeight": "700" }],
+            "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "600" }],
+            "headline-xl": ["32px", { "lineHeight": "40px", "fontWeight": "800" }],
+            "label-lg": ["15px", { "lineHeight": "20px", "fontWeight": "600" }],
+            "price-lg": ["22px", { "lineHeight": "26px", "fontWeight": "800" }],
+            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }]
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background-color: #e2e7ff;
+      border-radius: 9999px;
+    }
+  </style>
+
+  <!-- Firebase Web SDK (v10 compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+  <!-- Firebase Initialization & Interop for project 'lipsak-97e24' -->
+  <script>
+    (function() {
+      const STORAGE_KEY = 'firebase_lipsak_config';
+      const defaultConfig = {
+        apiKey: "",
+        authDomain: "lipsak-97e24.firebaseapp.com",
+        projectId: "lipsak-97e24",
+        storageBucket: "lipsak-97e24.appspot.com",
+        messagingSenderId: "764282864196",
+        appId: ""
+      };
+
+      function loadConfig() {
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) return Object.assign({}, defaultConfig, JSON.parse(saved));
+        } catch (e) {
+          console.warn("Failed to load saved Firebase config:", e);
+        }
+        return Object.assign({}, defaultConfig);
+      }
+
+      window.firebaseConfig = loadConfig();
+
+      let db = null;
+      function initFirebase() {
+        try {
+          if (window.firebaseConfig.apiKey) {
+            if (!firebase.apps.length) {
+              firebase.initializeApp(window.firebaseConfig);
+            } else {
+              firebase.app().delete().then(() => {
+                firebase.initializeApp(window.firebaseConfig);
+              });
+            }
+            db = firebase.firestore();
+            console.log("Firebase SDK initialized for project:", window.firebaseConfig.projectId);
+          } else {
+            console.log("No Web API key configured yet. Direct REST API mode active for lipsak-97e24.");
+          }
+        } catch (err) {
+          console.warn("Firebase SDK init warning (falling back to REST):", err);
+        }
+      }
+
+      initFirebase();
+
+      // Exposed for Dart interop
+      window.getFirebaseConfig = function() {
+        return JSON.stringify(window.firebaseConfig);
+      };
+
+      window.setFirebaseConfig = function(jsonStr) {
+        try {
+          const cfg = JSON.parse(jsonStr);
+          window.firebaseConfig = Object.assign({}, window.firebaseConfig, cfg);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(window.firebaseConfig));
+          initFirebase();
+          return JSON.stringify({ success: true, projectId: window.firebaseConfig.projectId });
+        } catch (e) {
+          return JSON.stringify({ success: false, error: e.message });
+        }
+      };
+
+      // Check if collection exists and has documents
+      window.checkCollectionStatus = async function(colName) {
+        const targetCol = colName || "Products";
+        const projectId = window.firebaseConfig.projectId || "lipsak-97e24";
+
+        if (db && window.firebaseConfig.apiKey) {
+          try {
+            const snap = await db.collection(targetCol).limit(1).get();
+            return JSON.stringify({
+              success: true,
+              exists: !snap.empty,
+              count: snap.size,
+              collection: targetCol,
+              projectId: projectId
+            });
+          } catch (e) {
+            console.warn("SDK collection check failed, trying REST:", e);
+          }
+        }
+
+        try {
+          const restUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${targetCol}?pageSize=1`;
+          const resp = await fetch(restUrl);
+          if (resp.ok) {
+            const json = await resp.json();
+            const docs = json.documents || [];
+            return JSON.stringify({
+              success: true,
+              exists: docs.length > 0,
+              count: docs.length,
+              collection: targetCol,
+              projectId: projectId
+            });
+          } else {
+            const errJson = await resp.json().catch(() => ({}));
+            return JSON.stringify({
+              success: false,
+              exists: false,
+              error: (errJson.error && errJson.error.message) || resp.statusText,
+              code: (errJson.error && errJson.error.status) || resp.status,
+              collection: targetCol,
+              projectId: projectId
+            });
+          }
+        } catch (err) {
+          return JSON.stringify({
+            success: false,
+            exists: false,
+            error: err.message || String(err),
+            collection: targetCol,
+            projectId: projectId
+          });
+        }
+      };
+
+      function parseRestFields(fields) {
+        const obj = {};
+        if (!fields) return obj;
+        for (const [k, v] of Object.entries(fields)) {
+          if ('stringValue' in v) obj[k] = v.stringValue;
+          else if ('integerValue' in v) obj[k] = parseInt(v.integerValue, 10);
+          else if ('doubleValue' in v) obj[k] = parseFloat(v.doubleValue);
+          else if ('booleanValue' in v) obj[k] = v.booleanValue;
+          else if ('timestampValue' in v) obj[k] = v.timestampValue;
+          else if ('arrayValue' in v) {
+            const arr = (v.arrayValue && v.arrayValue.values) ? v.arrayValue.values : [];
+            obj[k] = arr.map(item => {
+              if ('stringValue' in item) return item.stringValue;
+              if ('integerValue' in item) return parseInt(item.integerValue, 10);
+              if ('doubleValue' in item) return parseFloat(item.doubleValue);
+              if ('booleanValue' in item) return item.booleanValue;
+              return item;
+            });
+          } else if ('nullValue' in v) {
+            obj[k] = null;
+          }
+        }
+        return obj;
+      }
+
+      function valueToRestField(val) {
+        if (val === null || val === undefined) return { nullValue: null };
+        if (typeof val === 'boolean') return { booleanValue: val };
+        if (typeof val === 'number') {
+          if (Number.isInteger(val)) return { integerValue: String(val) };
+          return { doubleValue: val };
+        }
+        if (typeof val === 'string') {
+          if (val === 'SERVER_TIMESTAMP') return { timestampValue: new Date().toISOString() };
+          return { stringValue: val };
+        }
+        if (Array.isArray(val)) {
+          return { arrayValue: { values: val.map(valueToRestField) } };
+        }
+        return { stringValue: String(val) };
+      }
+
+      // Add Product to Firestore (Strict flat schema: 'products' root collection)
+      window.addProductToFirestore = async function(productJsonStr) {
+        let productData = {};
+        if (productJsonStr) {
+          try {
+            productData = JSON.parse(productJsonStr);
+          } catch (_) {}
+        }
+
+        const targetCol = productData.collectionName || "products";
+        const projectId = window.firebaseConfig.projectId || "lipsak-97e24";
+
+        // Map strictly to the new flat NoSQL schema
+        const cleanPayload = {
+          storeId: String(productData.storeId || ""),
+          vendorId: String(productData.vendorId || ""),
+          categoryId: String(productData.categoryId || productData.category || "women_dresses"),
+          topTab: String(productData.topTab || "women"),
+          title: String(productData.title || productData.nameAr || productData.Name || "منتج جديد"),
+          description: String(productData.description || ""),
+          thumbnail: String(productData.thumbnail || productData.imageUrl || ""),
+          images: Array.isArray(productData.images) && productData.images.length > 0 
+            ? productData.images 
+            : (productData.thumbnail ? [productData.thumbnail] : (productData.imageUrl ? [productData.imageUrl] : [])),
+          price: parseFloat(productData.price) || 0.0,
+          salePrice: parseFloat(productData.salePrice || productData.discountPrice) || 0.0,
+          saleLabel: String(productData.saleLabel || ""),
+          stock: parseInt(productData.stock, 10) || 0,
+          rating: parseFloat(productData.rating) || 0.0,
+          reviewsCount: parseInt(productData.reviewsCount, 10) || 0,
+          isFeatured: productData.isFeatured === true,
+          isActive: productData.isActive !== false
+        };
+
+        // If saleLabel is empty but salePrice < price, auto-calculate
+        if (!cleanPayload.saleLabel && cleanPayload.salePrice > 0 && cleanPayload.salePrice < cleanPayload.price) {
+          const discountPct = Math.round(((cleanPayload.price - cleanPayload.salePrice) / cleanPayload.price) * 100);
+          cleanPayload.saleLabel = `خصم ${discountPct}%`;
+        }
+
+        // 1. Try Firebase Web SDK if API Key is configured
+        if (db && window.firebaseConfig.apiKey) {
+          try {
+            cleanPayload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            const docRef = await db.collection(targetCol).add(cleanPayload);
+            console.log(`Product added via SDK to ${targetCol} in ${projectId}. Doc ID:`, docRef.id);
+            return JSON.stringify({
+              success: true,
+              id: docRef.id,
+              collection: targetCol,
+              projectId: projectId,
+              via: "Firebase Web SDK",
+              message: `تم حفظ المنتج بنجاح في مجموعة ${targetCol} بمشروع ${projectId}.`
+            });
+          } catch (sdkError) {
+            console.warn("Firebase SDK save failed, attempting REST API fallback:", sdkError);
+          }
+        }
+
+        // 2. Direct Firestore REST API (Works directly using Project ID)
+        try {
+          const restUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${targetCol}`;
+          const fields = {};
+          for (const [k, v] of Object.entries(cleanPayload)) {
+            fields[k] = valueToRestField(v);
+          }
+          fields.createdAt = { timestampValue: new Date().toISOString() };
+
+          const restResp = await fetch(restUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fields })
+          });
+
+          const restJson = await restResp.json();
+          if (restResp.ok) {
+            const docPath = restJson.name || "";
+            const docId = docPath.split("/").pop() || "new_doc";
+            console.log(`Product added via REST API to ${targetCol} in ${projectId}. Doc ID:`, docId);
+            return JSON.stringify({
+              success: true,
+              id: docId,
+              collection: targetCol,
+              projectId: projectId,
+              via: "Firestore REST API",
+              message: `تم حفظ المنتج بنجاح في مجموعة ${targetCol} بمشروع ${projectId}!`
+            });
+          } else {
+            const errMsg = (restJson.error && restJson.error.message) || restResp.statusText;
+            const errCode = (restJson.error && restJson.error.status) || restResp.status;
+            return JSON.stringify({
+              success: false,
+              error: errMsg,
+              code: errCode,
+              projectId: projectId,
+              collection: targetCol
+            });
+          }
+        } catch (restErr) {
+          return JSON.stringify({
+            success: false,
+            error: restErr.message || String(restErr),
+            projectId: projectId,
+            collection: targetCol
+          });
+        }
+      };
+
+      // Get Products from Firestore with optional storeId filtering
+      window.getProductsFromFirestore = async function(colName, storeId) {
+        let targetCol = colName || "products";
+        const projectId = window.firebaseConfig.projectId || "lipsak-97e24";
+
+        if (db && window.firebaseConfig.apiKey) {
+          try {
+            let colRef = db.collection(targetCol);
+            let query = colRef;
+            if (storeId && String(storeId).trim().length > 0) {
+              query = query.where('storeId', '==', String(storeId).trim());
+            }
+
+            let snapshot = await query.get();
+            // Fallback for transition if products collection is empty but old Products had items
+            if (snapshot.empty && targetCol === "products" && !storeId) {
+              const upperSnap = await db.collection("Products").get();
+              if (!upperSnap.empty) {
+                snapshot = upperSnap;
+                targetCol = "Products";
+              }
+            }
+
+            const items = [];
+            snapshot.forEach((doc) => {
+              const data = doc.data();
+              data.id = doc.id;
+              items.push(data);
+            });
+            return JSON.stringify({ success: true, products: items, collection: targetCol });
+          } catch (e) {
+            console.warn("SDK getProducts failed, falling back to REST:", e);
+          }
+        }
+
+        try {
+          const restUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${targetCol}?pageSize=200`;
+          const resp = await fetch(restUrl);
+          if (resp.ok) {
+            const json = await resp.json();
+            const docs = json.documents || [];
+            let items = docs.map((d) => {
+              const parsed = parseRestFields(d.fields);
+              parsed.id = (d.name || "").split("/").pop();
+              return parsed;
+            });
+
+            if (storeId && String(storeId).trim().length > 0) {
+              items = items.filter(it => it.storeId === String(storeId).trim());
+            }
+
+            return JSON.stringify({ success: true, products: items, collection: targetCol });
+          } else {
+            return JSON.stringify({ success: false, products: [], error: resp.statusText });
+          }
+        } catch (err) {
+          return JSON.stringify({ success: false, products: [], error: err.message || String(err) });
+        }
+      };
+
+      // Update Product in Firestore (Partial update: stock, price, salePrice, etc.)
+      window.updateProductInFirestore = async function(docId, updatesJsonStr, colName) {
+        if (!docId) return JSON.stringify({ success: false, error: "Document ID is required for update" });
+        const targetCol = colName || "products";
+        const projectId = window.firebaseConfig.projectId || "lipsak-97e24";
+        let updates = {};
+        try {
+          updates = JSON.parse(updatesJsonStr);
+        } catch (e) {
+          return JSON.stringify({ success: false, error: "Invalid JSON updates: " + e.message });
+        }
+
+        if (db && window.firebaseConfig.apiKey) {
+          try {
+            await db.collection(targetCol).doc(docId).update(updates);
+            return JSON.stringify({ success: true, id: docId, collection: targetCol, message: "تم تحديث المنتج بنجاح" });
+          } catch (e) {
+            console.warn("SDK updateProduct failed, trying REST:", e);
+          }
+        }
+
+        try {
+          const fieldKeys = Object.keys(updates);
+          const maskParams = fieldKeys.map(k => `updateMask.fieldPaths=${encodeURIComponent(k)}`).join('&');
+          const restUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${targetCol}/${docId}?${maskParams}`;
+          
+          const fields = {};
+          for (const [k, v] of Object.entries(updates)) {
+            fields[k] = valueToRestField(v);
+          }
+
+          const resp = await fetch(restUrl, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fields })
+          });
+
+          if (resp.ok) {
+            return JSON.stringify({ success: true, id: docId, collection: targetCol, message: "تم تحديث المنتج بنجاح عبر REST" });
+          } else {
+            const errJson = await resp.json().catch(() => ({}));
+            return JSON.stringify({ success: false, error: (errJson.error && errJson.error.message) || resp.statusText });
+          }
+        } catch (err) {
+          return JSON.stringify({ success: false, error: err.message || String(err) });
+        }
+      };
+
+      // Delete Product from Firestore
+      window.deleteProductFromFirestore = async function(docId, colName) {
+        if (!docId) return JSON.stringify({ success: false, error: "Document ID is required for delete" });
+        const targetCol = colName || "products";
+        const projectId = window.firebaseConfig.projectId || "lipsak-97e24";
+
+        if (db && window.firebaseConfig.apiKey) {
+          try {
+            await db.collection(targetCol).doc(docId).delete();
+            return JSON.stringify({ success: true, id: docId, collection: targetCol, message: "تم حذف المنتج بنجاح" });
+          } catch (e) {
+            console.warn("SDK deleteProduct failed, trying REST:", e);
+          }
+        }
+
+        try {
+          const restUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${targetCol}/${docId}`;
+          const resp = await fetch(restUrl, { method: "DELETE" });
+          if (resp.ok) {
+            return JSON.stringify({ success: true, id: docId, collection: targetCol, message: "تم حذف المنتج بنجاح عبر REST" });
+          } else {
+            const errJson = await resp.json().catch(() => ({}));
+            return JSON.stringify({ success: false, error: (errJson.error && errJson.error.message) || resp.statusText });
+          }
+        } catch (err) {
+          return JSON.stringify({ success: false, error: err.message || String(err) });
+        }
+      };
+    })();
+  </script>
+
+  <!-- Client-side compiled script by Jaspr -->
+  <script defer src="main.client.dart.js"></script>
+</head>
+<body class="bg-background text-on-surface font-body-md text-body-md antialiased h-full flex overflow-hidden selection:bg-primary selection:text-on-primary">
+</body>
+</html>
