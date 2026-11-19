@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>جارٍ التحويل | متجر نبض</title>
+  <script>
+    // GitHub Pages SPA 404 Handler: Redirects sub-routes to the base repository with hash routing
+    (function() {
+      var repoName = '/bazz_dashboard';
+      var path = window.location.pathname;
+
+      if (path.indexOf(repoName) === 0) {
+        path = path.substring(repoName.length);
+      }
+
+      if (!path.startsWith('/')) {
+        path = '/' + path;
+      }
+
+      // Redirect to GitHub Pages repo root with route in hash
+      var targetUrl = repoName + '/#' + path + window.location.search;
+      window.location.replace(targetUrl);
+    })();
+  </script>
+</head>
+<body>
+</body>
+</html>
