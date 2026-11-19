@@ -1,10 +1,46 @@
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
+import '../services/firebase_service.dart';
 
 /// The Products & Inventory Management Page in Jaspr for Matjar Nabdh.
-/// Matches the Stitch Desktop screen `c6639327130e4220bbf7c8a2f4b137b9`.
-class ProductsPage extends StatelessComponent {
+/// Supports live fetching from Firebase Firestore for project 'lipsk'.
+class ProductsPage extends StatefulComponent {
   const ProductsPage({super.key});
+
+  @override
+  State<ProductsPage> createState() => _ProductsPageState();
+}
+
+class _ProductsPageState extends State<ProductsPage> {
+  List<Map<String, dynamic>> firebaseProducts = [];
+  bool isLoading = false;
+  String? loadError;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchFirebaseProducts();
+  }
+
+  Future<void> _fetchFirebaseProducts() async {
+    setState(() {
+      isLoading = true;
+      loadError = null;
+    });
+
+    try {
+      final items = await FirebaseService.getProducts();
+      setState(() {
+        firebaseProducts = items;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        loadError = e.toString();
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Component build(BuildContext context) {
@@ -35,6 +71,17 @@ class ProductsPage extends StatelessComponent {
           ]),
 
           div(classes: 'flex items-center gap-3', [
+            button(
+              classes:
+                  'h-11 px-4 rounded-full border border-primary/30 hover:border-primary bg-primary/5 hover:bg-primary/10 text-primary font-label-md text-label-md font-bold flex items-center gap-2 transition-all cursor-pointer',
+              events: {'click': (e) => _fetchFirebaseProducts()},
+              [
+                span(classes: 'material-symbols-outlined text-[18px] ${isLoading ? "animate-spin" : ""}', [
+                  Component.text('sync'),
+                ]),
+                span([Component.text(isLoading ? 'جارٍ المزامنة...' : 'مزامنة مع Firebase lipsak')]),
+              ],
+            ),
             a(
               classes:
                   'h-11 px-5 rounded-full bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md font-bold flex items-center gap-2 shadow-md shadow-primary/20 active:scale-95 transition-all',
@@ -56,12 +103,14 @@ class ProductsPage extends StatelessComponent {
             [
               div([
                 p(classes: 'font-body-sm text-body-sm text-outline', [Component.text('إجمالي المنتجات')]),
-                h3(classes: 'font-price-lg text-price-lg text-on-surface mt-1 font-bold', [Component.text('340')]),
+                h3(classes: 'font-price-lg text-price-lg text-on-surface mt-1 font-bold', [
+                  Component.text('${340 + firebaseProducts.length}'),
+                ]),
                 span(
                   classes: 'text-[11px] text-emerald-600 font-semibold inline-flex items-center gap-0.5 mt-1',
                   [
                     span(classes: 'material-symbols-outlined text-[13px]', [Component.text('trending_up')]),
-                    Component.text('+14 هذا الشهر'),
+                    Component.text('+${firebaseProducts.length} من Firebase'),
                   ],
                 ),
               ]),
@@ -82,12 +131,14 @@ class ProductsPage extends StatelessComponent {
             [
               div([
                 p(classes: 'font-body-sm text-body-sm text-outline', [Component.text('منتجات نشطة بالمتجر')]),
-                h3(classes: 'font-price-lg text-price-lg text-on-surface mt-1 font-bold', [Component.text('312')]),
+                h3(classes: 'font-price-lg text-price-lg text-on-surface mt-1 font-bold', [
+                  Component.text('${312 + firebaseProducts.where((p) => p['isPublished'] == true).length}'),
+                ]),
                 span(
                   classes: 'text-[11px] text-emerald-600 font-semibold inline-flex items-center gap-0.5 mt-1',
                   [
                     span(classes: 'material-symbols-outlined text-[13px]', [Component.text('check_circle')]),
-                    Component.text('91.7% نسبة التوفر'),
+                    Component.text('نشطة في متجر نبض'),
                   ],
                 ),
               ]),
@@ -100,51 +151,53 @@ class ProductsPage extends StatelessComponent {
             ],
           ),
 
-          // Low Stock
+          // Firebase Live Count
+          div(
+            classes:
+                'bg-surface-container-lowest p-5 rounded-2xl border-2 border-primary/30 shadow-sm flex items-center justify-between',
+            [
+              div([
+                p(classes: 'font-body-sm text-body-sm text-primary font-bold', [Component.text('مستندات Firebase lipsak')]),
+                h3(classes: 'font-price-lg text-price-lg text-primary mt-1 font-bold', [
+                  Component.text('${firebaseProducts.length}'),
+                ]),
+                span(
+                  classes: 'text-[11px] text-emerald-600 font-semibold inline-flex items-center gap-0.5 mt-1',
+                  [
+                    span(classes: 'material-symbols-outlined text-[13px]', [Component.text('cloud_done')]),
+                    Component.text('مجموعة /Products'),
+                  ],
+                ),
+              ]),
+              div(
+                classes: 'w-12 h-12 rounded-xl bg-primary-fixed text-primary flex items-center justify-center shadow-sm',
+                [
+                  span(classes: 'material-symbols-outlined text-2xl', [Component.text('cloud_sync')]),
+                ],
+              ),
+            ],
+          ),
+
+          // Stock Alert
           div(
             classes:
                 'bg-surface-container-lowest p-5 rounded-2xl border border-surface-container-high/40 shadow-sm flex items-center justify-between',
             [
               div([
-                p(classes: 'font-body-sm text-body-sm text-outline', [Component.text('أوشك على النفاد')]),
-                h3(classes: 'font-price-lg text-price-lg text-secondary-container mt-1 font-bold', [Component.text('6')]),
+                p(classes: 'font-body-sm text-body-sm text-outline', [Component.text('تنبيهات المخزون')]),
+                h3(classes: 'font-price-lg text-price-lg text-on-surface mt-1 font-bold', [Component.text('18')]),
                 span(
-                  classes: 'text-[11px] text-secondary font-semibold inline-flex items-center gap-0.5 mt-1',
+                  classes: 'text-[11px] text-amber-600 font-semibold inline-flex items-center gap-0.5 mt-1',
                   [
                     span(classes: 'material-symbols-outlined text-[13px]', [Component.text('warning')]),
-                    Component.text('يحتاج توريد عاجل'),
+                    Component.text('تحتاج لإعادة طلب'),
                   ],
                 ),
               ]),
               div(
                 classes: 'w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-sm',
                 [
-                  span(classes: 'material-symbols-outlined text-2xl', [Component.text('warning_amber')]),
-                ],
-              ),
-            ],
-          ),
-
-          // Out of Stock
-          div(
-            classes:
-                'bg-surface-container-lowest p-5 rounded-2xl border border-surface-container-high/40 shadow-sm flex items-center justify-between',
-            [
-              div([
-                p(classes: 'font-body-sm text-body-sm text-outline', [Component.text('نفدت الكمية تماماً')]),
-                h3(classes: 'font-price-lg text-price-lg text-error mt-1 font-bold', [Component.text('22')]),
-                span(
-                  classes: 'text-[11px] text-error font-semibold inline-flex items-center gap-0.5 mt-1',
-                  [
-                    span(classes: 'material-symbols-outlined text-[13px]', [Component.text('block')]),
-                    Component.text('مخفي من العرض'),
-                  ],
-                ),
-              ]),
-              div(
-                classes: 'w-12 h-12 rounded-xl bg-error-container/40 text-error flex items-center justify-center shadow-sm',
-                [
-                  span(classes: 'material-symbols-outlined text-2xl', [Component.text('remove_shopping_cart')]),
+                  span(classes: 'material-symbols-outlined text-2xl', [Component.text('production_quantity_limits')]),
                 ],
               ),
             ],
@@ -191,36 +244,9 @@ class ProductsPage extends StatelessComponent {
                   [Component.text('expand_more')],
                 ),
               ]),
-
-              // Stock Status filter
-              div(classes: 'relative', [
-                select(
-                  classes:
-                      'h-11 pr-3 pl-8 rounded-full border border-surface-container-high bg-surface-container-low/50 text-on-surface text-body-sm focus:border-primary focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer',
-                  [
-                    option([Component.text('حالة المخزون: الكل')]),
-                    option([Component.text('متوفر (نشط)')]),
-                    option([Component.text('منخفض المخزون')]),
-                    option([Component.text('نفذت الكمية')]),
-                  ],
-                ),
-                span(
-                  classes:
-                      'material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[18px]',
-                  [Component.text('filter_list')],
-                ),
-              ]),
             ]),
 
             div(classes: 'flex items-center gap-2', [
-              button(
-                classes:
-                    'h-11 px-4 rounded-full border border-surface-container-high bg-surface-container-lowest hover:bg-surface-container text-on-surface text-body-sm font-semibold flex items-center gap-1.5 transition-all',
-                [
-                  span(classes: 'material-symbols-outlined text-[18px]', [Component.text('download')]),
-                  span([Component.text('تصدير Excel')]),
-                ],
-              ),
               a(
                 classes:
                     'h-11 px-4 rounded-full bg-primary text-on-primary hover:bg-primary-container text-body-sm font-bold flex items-center gap-1.5 shadow-sm transition-all',
@@ -250,13 +276,36 @@ class ProductsPage extends StatelessComponent {
                     th(classes: 'py-3.5 px-4', [Component.text('القسم / التصنيف')]),
                     th(classes: 'py-3.5 px-4', [Component.text('السعر')]),
                     th(classes: 'py-3.5 px-4', [Component.text('حالة المخزون')]),
-                    th(classes: 'py-3.5 px-4', [Component.text('المبيعات')]),
+                    th(classes: 'py-3.5 px-4', [Component.text('المصدر / المصادقة')]),
                     th(classes: 'py-3.5 px-4 text-center', [Component.text('حالة النشر')]),
                     th(classes: 'py-3.5 px-4 text-center', [Component.text('الإجراءات')]),
                   ]),
                 ]),
                 tbody(classes: 'divide-y divide-surface-container-high/40 font-body-md text-body-md', [
-                  // Row 1
+                  // Dynamically render Firebase products first
+                  for (final fbProd in firebaseProducts)
+                    _buildProductRow(
+                      imageUrl: fbProd['imageUrl']?.toString() ??
+                          'https://lh3.googleusercontent.com/aida-public/AB6AXuDWnaA1xderq1MlEPMwI9HNmHkmJW71LkSgseqGGboAEwdE-_wFaxzVPNtGUB0QMWakdritPZ4b9eKQqA1cCr74EHpJmdNws0zBmoOP8nW7v-5yulYG5WO_LunNrqSZYW8FOA45E2nfPjXvtp4eggUysjR5AmC2AJUMRmNjFdl5wv_4GZqk7a1pVxaDuTbhNcIbELLqAnTcIhTqzGQxdkAbjd6r0egLM0bN_8IgjpT_3c_BkTYczcaY',
+                      title: fbProd['nameAr']?.toString().isNotEmpty == true
+                          ? fbProd['nameAr'].toString()
+                          : (fbProd['nameEn']?.toString() ?? 'منتج بدون اسم'),
+                      sku: fbProd['sku']?.toString() ?? 'N/A',
+                      brand: fbProd['brand']?.toString() ?? 'متجر نبض',
+                      category: fbProd['category']?.toString() ?? 'عام',
+                      price: '${fbProd['discountPrice'] ?? fbProd['price'] ?? 0} ر.س',
+                      oldPrice: (fbProd['discountPrice'] != null && fbProd['discountPrice'] != fbProd['price'])
+                          ? '${fbProd['price']} ر.س'
+                          : null,
+                      stockLabel: 'متوفر (${fbProd['stock'] ?? 0} قطعة)',
+                      stockColor: (fbProd['stock'] is num && (fbProd['stock'] as num) > 10) ? 'emerald' : 'amber',
+                      stockPercent: 90,
+                      sales: 'Firebase Live (lipsak)',
+                      isPublished: fbProd['isPublished'] == true,
+                      isFromFirebase: true,
+                    ),
+
+                  // Default Catalog Row 1
                   _buildProductRow(
                     imageUrl:
                         'https://lh3.googleusercontent.com/aida-public/AB6AXuDWnaA1xderq1MlEPMwI9HNmHkmJW71LkSgseqGGboAEwdE-_wFaxzVPNtGUB0QMWakdritPZ4b9eKQqA1cCr74EHpJmdNws0zBmoOP8nW7v-5yulYG5WO_LunNrqSZYW8FOA45E2nfPjXvtp4eggUysjR5AmC2AJUMRmNjFdl5wv_4GZqk7a1pVxaDuTbhNcIbELLqAnTcIhTqzGQxdkAbjd6r0egLM0bN_8IgjpT_3c_BkTYczcaY',
@@ -272,6 +321,7 @@ class ProductsPage extends StatelessComponent {
                     sales: '1,420 طلب',
                     isPublished: true,
                   ),
+
                   // Row 2
                   _buildProductRow(
                     imageUrl:
@@ -288,6 +338,7 @@ class ProductsPage extends StatelessComponent {
                     sales: '850 طلب',
                     isPublished: true,
                   ),
+
                   // Row 3
                   _buildProductRow(
                     imageUrl:
@@ -304,50 +355,7 @@ class ProductsPage extends StatelessComponent {
                     sales: '2,105 طلب',
                     isPublished: false,
                   ),
-                  // Row 4
-                  _buildProductRow(
-                    imageUrl:
-                        'https://lh3.googleusercontent.com/aida-public/AB6AXuBjuizO28VkLU0SbOp8fBcIZumVX95Bn6mfzrtj-hoW5XZWC7biuZZUHIM0lpBS8CQlYpvIeckGr94rD6N9a8T-m48_Or3xiji2h_oYLPQhxJjDZkXxIuNw-eukrqu1GeoaKU9y-zLByMQBIK_Hs7n-rXaNHpHObSfVItLQvXBr-3kRcRusfo2RTAgQ1T_aY_16w0m4s8h8ivwmvLnTKA1ha6vB1FnSgRq_jujjzJxOoTRbdReFbMYC',
-                    title: 'سترة أديداس أوريجينالز للتمارين',
-                    sku: 'ADS-ORG-TRK',
-                    brand: 'Adidas',
-                    category: 'ملابس رياضية',
-                    price: '329 ر.س',
-                    oldPrice: '399 ر.س',
-                    stockLabel: 'متوفر (92 قطعة)',
-                    stockColor: 'emerald',
-                    stockPercent: 65,
-                    sales: '614 طلب',
-                    isPublished: true,
-                  ),
                 ]),
-              ]),
-            ]),
-
-            // Pagination
-            div(classes: 'px-6 py-4 border-t border-surface-container-high/40 flex flex-wrap items-center justify-between gap-4', [
-              span(classes: 'text-body-sm font-body-sm text-outline', [
-                Component.text('عرض '),
-                span(classes: 'font-bold text-on-surface', [Component.text('1 - 4')]),
-                Component.text(' من أصل '),
-                span(classes: 'font-bold text-on-surface', [Component.text('340')]),
-                Component.text(' منتج'),
-              ]),
-              div(classes: 'flex items-center gap-1', [
-                button(
-                  classes: 'p-2 rounded-lg border border-surface-container-high hover:bg-surface-container text-outline disabled:opacity-40',
-                  attributes: {'disabled': 'true'},
-                  [span(classes: 'material-symbols-outlined text-[18px]', [Component.text('chevron_right')])],
-                ),
-                button(classes: 'w-8 h-8 rounded-lg bg-primary text-on-primary font-bold text-xs', [Component.text('1')]),
-                button(classes: 'w-8 h-8 rounded-lg hover:bg-surface-container text-on-surface font-semibold text-xs', [Component.text('2')]),
-                button(classes: 'w-8 h-8 rounded-lg hover:bg-surface-container text-on-surface font-semibold text-xs', [Component.text('3')]),
-                span(classes: 'px-1 text-outline', [Component.text('...')]),
-                button(classes: 'w-8 h-8 rounded-lg hover:bg-surface-container text-on-surface font-semibold text-xs', [Component.text('34')]),
-                button(
-                  classes: 'p-2 rounded-lg border border-surface-container-high hover:bg-surface-container text-on-surface',
-                  [span(classes: 'material-symbols-outlined text-[18px]', [Component.text('chevron_left')])],
-                ),
               ]),
             ]),
           ],
@@ -369,6 +377,7 @@ class ProductsPage extends StatelessComponent {
     required int stockPercent,
     required String sales,
     required bool isPublished,
+    bool isFromFirebase = false,
   }) {
     final colorClasses = switch (stockColor) {
       'emerald' => ('bg-emerald-500', 'text-emerald-700'),
@@ -388,8 +397,14 @@ class ProductsPage extends StatelessComponent {
             alt: title,
           ),
           div([
-            a(classes: 'font-bold text-on-surface hover:text-primary transition-colors', href: '/add-product', [
-              Component.text(title),
+            div(classes: 'flex items-center gap-2', [
+              a(classes: 'font-bold text-on-surface hover:text-primary transition-colors', href: '/add-product', [
+                Component.text(title),
+              ]),
+              if (isFromFirebase)
+                span(classes: 'bg-primary-fixed text-primary text-[10px] font-bold px-1.5 py-0.5 rounded-full', [
+                  Component.text('Firebase lipsk'),
+                ]),
             ]),
             div(classes: 'flex items-center gap-2 mt-0.5', [
               span(classes: 'text-[11px] font-mono bg-surface-container px-1.5 py-0.5 rounded text-outline', [
@@ -419,7 +434,15 @@ class ProductsPage extends StatelessComponent {
           div(classes: '${colorClasses.$1} h-full rounded-full', attributes: {'style': 'width: $stockPercent%'}, []),
         ]),
       ]),
-      td(classes: 'py-4 px-4 font-semibold text-on-surface', [Component.text(sales)]),
+      td(classes: 'py-4 px-4 font-semibold text-on-surface', [
+        if (isFromFirebase)
+          span(classes: 'text-xs text-primary font-bold flex items-center gap-1', [
+            span(classes: 'material-symbols-outlined text-[14px]', [Component.text('cloud_done')]),
+            Component.text('Firestore Live'),
+          ])
+        else
+          Component.text(sales),
+      ]),
       td(classes: 'py-4 px-4 text-center', [
         label(classes: 'relative inline-flex items-center cursor-pointer', [
           input(classes: 'sr-only peer', type: InputType.checkbox, checked: isPublished),

@@ -1,11 +1,23 @@
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
+import 'package:jaspr_riverpod/jaspr_riverpod.dart';
+
+import '../core/config/feature_flags.dart';
+import '../core/config/feature_flags_provider.dart';
+import 'sidebar_item.dart';
 
 class Sidebar extends StatelessComponent {
   const Sidebar({super.key});
 
   @override
   Component build(BuildContext context) {
+    final flags = context.watch(featureFlagsProvider);
+
+    final showMarketingSection = flags.isEnabled(AppFeature.coupons) ||
+        flags.isEnabled(AppFeature.reportsAnalytics) ||
+        flags.isEnabled(AppFeature.storeSettings) ||
+        flags.isEnabled(AppFeature.marketing);
+
     return aside(
       classes:
           'w-72 bg-surface-container-lowest flex flex-col flex-shrink-0 z-30 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.06)] border-l border-surface-container-high/40 select-none',
@@ -40,192 +52,88 @@ class Sidebar extends StatelessComponent {
             Component.text('نظرة عامة وإدارة المتجر'),
           ]),
 
-          // Item: Dashboard
-          a(
-            classes:
-                'flex items-center justify-between px-3.5 py-3 rounded-xl hover:bg-surface-container text-on-surface-variant font-medium transition-all duration-150',
+          // Item: Dashboard (Active in MVP)
+          const SideMenuItem(
+            feature: AppFeature.dashboard,
+            title: 'الرئيسية والإحصائيات',
+            icon: 'dashboard',
             href: '/',
-            [
-              div(classes: 'flex items-center gap-3', [
-                span(
-                  classes: 'material-symbols-outlined text-[20px]',
-                  attributes: {'data-icon': 'dashboard'},
-                  [Component.text('dashboard')],
-                ),
-                span(classes: 'font-label-md text-label-md', [
-                  Component.text('الرئيسية والإحصائيات'),
-                ]),
-              ]),
-            ],
           ),
 
-          // Item: Products & Inventory
-          a(
-            classes:
-                'flex items-center justify-between px-3.5 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all duration-150 group',
+          // Item: Products & Inventory (Active in MVP)
+          const SideMenuItem(
+            feature: AppFeature.productsInventory,
+            title: 'المنتجات والمخزون',
+            icon: 'inventory_2',
             href: '/products',
-            [
-              div(classes: 'flex items-center gap-3', [
-                span(
-                  classes: 'material-symbols-outlined text-[20px] text-outline group-hover:text-primary transition-colors',
-                  attributes: {'data-icon': 'inventory_2'},
-                  [Component.text('inventory_2')],
-                ),
-                span(classes: 'font-label-md text-label-md', [
-                  Component.text('المنتجات والمخزون'),
-                ]),
-              ]),
-              span(
-                classes:
-                    'bg-surface-container-high text-on-surface-variant group-hover:bg-primary-fixed group-hover:text-primary font-label-sm text-label-sm px-2 py-0.5 rounded-full transition-colors',
-                [Component.text('340')],
-              ),
-            ],
+            badgeText: '340',
           ),
 
-          // Item: Add Product Quick Sub-link
-          a(
-            classes:
-                'flex items-center justify-between px-3 py-2 rounded-xl text-primary font-semibold bg-primary/5 hover:bg-primary/10 transition-all duration-150 mr-4',
+          // Item: Add Product Quick Sub-link (Active in MVP)
+          const SideMenuItem(
+            feature: AppFeature.productsInventory,
+            title: 'إضافة منتج جديد +',
+            icon: 'add_circle',
             href: '/add-product',
-            [
-              div(classes: 'flex items-center gap-2', [
-                span(
-                  classes: 'material-symbols-outlined text-[18px]',
-                  attributes: {'data-icon': 'add_circle'},
-                  [Component.text('add_circle')],
-                ),
-                span(classes: 'font-label-sm text-label-sm', [
-                  Component.text('إضافة منتج جديد +'),
-                ]),
-              ]),
-              span(classes: 'text-[10px] bg-primary text-on-primary px-1.5 py-0.2 rounded font-bold', [
-                Component.text('جديد'),
-              ]),
-            ],
+            badgeText: 'جديد',
+            isSubItem: true,
           ),
 
-          // Item: Orders
-          a(
-            classes:
-                'flex items-center justify-between px-3.5 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all duration-150 group',
+          // Item: Orders & Shipments (Hidden in MVP)
+          const SideMenuItem(
+            feature: AppFeature.ordersShipments,
+            title: 'الطلبات والشحنات',
+            icon: 'local_shipping',
             href: '#',
-            [
-              div(classes: 'flex items-center gap-3', [
-                span(
-                  classes: 'material-symbols-outlined text-[20px] text-outline group-hover:text-primary transition-colors',
-                  attributes: {'data-icon': 'local_shipping'},
-                  [Component.text('local_shipping')],
-                ),
-                span(classes: 'font-label-md text-label-md', [
-                  Component.text('الطلبات والشحنات'),
-                ]),
-              ]),
-              span(
-                classes:
-                    'bg-secondary-container text-on-secondary-container font-label-sm text-label-sm px-2 py-0.5 rounded-full font-bold',
-                [Component.text('12 جديد')],
-              ),
-            ],
+            badgeText: '12 جديد',
+            badgeClasses:
+                'bg-secondary-container text-on-secondary-container font-label-sm text-label-sm px-2 py-0.5 rounded-full font-bold',
           ),
 
-          // Item: Categories
-          a(
-            classes:
-                'flex items-center justify-between px-3.5 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all duration-150 group',
+          // Item: Categories (Hidden in MVP)
+          const SideMenuItem(
+            feature: AppFeature.categories,
+            title: 'الأقسام والتصنيفات',
+            icon: 'category',
             href: '#',
-            [
-              div(classes: 'flex items-center gap-3', [
-                span(
-                  classes: 'material-symbols-outlined text-[20px] text-outline group-hover:text-primary transition-colors',
-                  attributes: {'data-icon': 'category'},
-                  [Component.text('category')],
-                ),
-                span(classes: 'font-label-md text-label-md', [
-                  Component.text('الأقسام والتصنيفات'),
-                ]),
-              ]),
-            ],
           ),
 
-          // Item: Customers
-          a(
-            classes:
-                'flex items-center justify-between px-3.5 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all duration-150 group',
+          // Item: Customers & Users (Hidden in MVP)
+          const SideMenuItem(
+            feature: AppFeature.customers,
+            title: 'العملاء والمستخدمين',
+            icon: 'group',
             href: '#',
-            [
-              div(classes: 'flex items-center gap-3', [
-                span(
-                  classes: 'material-symbols-outlined text-[20px] text-outline group-hover:text-primary transition-colors',
-                  attributes: {'data-icon': 'group'},
-                  [Component.text('group')],
-                ),
-                span(classes: 'font-label-md text-label-md', [
-                  Component.text('العملاء والمستخدمين'),
-                ]),
-              ]),
-            ],
           ),
 
-          div(classes: 'px-3 pb-2 pt-5 text-[11px] font-bold text-outline uppercase tracking-wider font-label-sm', [
-            Component.text('التسويق والتقارير'),
-          ]),
+          // Marketing & Reports Section Header (Hidden if all sub-items are disabled)
+          if (showMarketingSection)
+            div(classes: 'px-3 pb-2 pt-5 text-[11px] font-bold text-outline uppercase tracking-wider font-label-sm', [
+              Component.text('التسويق والتقارير'),
+            ]),
 
-          // Item: Coupons
-          a(
-            classes:
-                'flex items-center justify-between px-3.5 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all duration-150 group',
+          // Item: Coupons (Hidden in MVP)
+          const SideMenuItem(
+            feature: AppFeature.coupons,
+            title: 'الكوبونات والعروض',
+            icon: 'confirmation_number',
             href: '#',
-            [
-              div(classes: 'flex items-center gap-3', [
-                span(
-                  classes: 'material-symbols-outlined text-[20px] text-outline group-hover:text-primary transition-colors',
-                  attributes: {'data-icon': 'confirmation_number'},
-                  [Component.text('confirmation_number')],
-                ),
-                span(classes: 'font-label-md text-label-md', [
-                  Component.text('الكوبونات والعروض'),
-                ]),
-              ]),
-            ],
           ),
 
-          // Item: Analytics
-          a(
-            classes:
-                'flex items-center justify-between px-3.5 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all duration-150 group',
+          // Item: Analytics & Sales (Hidden in MVP)
+          const SideMenuItem(
+            feature: AppFeature.reportsAnalytics,
+            title: 'التقارير والمبيعات',
+            icon: 'trending_up',
             href: '#',
-            [
-              div(classes: 'flex items-center gap-3', [
-                span(
-                  classes: 'material-symbols-outlined text-[20px] text-outline group-hover:text-primary transition-colors',
-                  attributes: {'data-icon': 'trending_up'},
-                  [Component.text('trending_up')],
-                ),
-                span(classes: 'font-label-md text-label-md', [
-                  Component.text('التقارير والمبيعات'),
-                ]),
-              ]),
-            ],
           ),
 
-          // Item: Settings
-          a(
-            classes:
-                'flex items-center justify-between px-3.5 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all duration-150 group',
+          // Item: Settings (Hidden in MVP)
+          const SideMenuItem(
+            feature: AppFeature.storeSettings,
+            title: 'إعدادات المتجر وFirebase',
+            icon: 'settings',
             href: '#',
-            [
-              div(classes: 'flex items-center gap-3', [
-                span(
-                  classes: 'material-symbols-outlined text-[20px] text-outline group-hover:text-primary transition-colors',
-                  attributes: {'data-icon': 'settings'},
-                  [Component.text('settings')],
-                ),
-                span(classes: 'font-label-md text-label-md', [
-                  Component.text('إعدادات المتجر وFirebase'),
-                ]),
-              ]),
-            ],
           ),
         ]),
 
