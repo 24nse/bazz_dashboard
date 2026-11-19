@@ -3,6 +3,29 @@
 <head>
   <base href="/bazz_dashboard/"/>
   <meta charset="utf-8"/>
+  <script>
+    // GitHub Pages Base & Hash Route Handler
+    (function() {
+      var base = document.querySelector('base')?.getAttribute('href') || '/bazz_dashboard/';
+      var cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+
+      // 1. If loaded with a hash (e.g. /#/add-product from direct link or 404.html redirect), restore route
+      if (window.location.hash && window.location.hash.startsWith('#/')) {
+        var route = window.location.hash.slice(1);
+        window.history.replaceState(null, '', cleanBase + route + window.location.search);
+      }
+
+      // 2. Ensure all root-relative links respect base href without escaping to domain root
+      document.addEventListener('click', function(e) {
+        var a = e.target.closest('a');
+        if (!a) return;
+        var href = a.getAttribute('href');
+        if (href && href.startsWith('/') && !href.startsWith('//') && !href.startsWith(cleanBase)) {
+          a.setAttribute('href', cleanBase + href);
+        }
+      }, true);
+    })();
+  </script>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <title>لوحة التحكم الإدارية | متجر نبض</title>
   
