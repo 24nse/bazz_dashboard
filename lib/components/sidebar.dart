@@ -4,6 +4,7 @@ import 'package:jaspr_riverpod/jaspr_riverpod.dart';
 
 import '../core/config/feature_flags.dart';
 import '../core/config/feature_flags_provider.dart';
+import '../features/inventory/presentation/providers/inventory_providers.dart';
 import 'sidebar_item.dart';
 
 class Sidebar extends StatelessComponent {
@@ -12,6 +13,7 @@ class Sidebar extends StatelessComponent {
   @override
   Component build(BuildContext context) {
     final flags = context.watch(featureFlagsProvider);
+    final totalProducts = context.watch(totalProductsCountProvider);
 
     final showMarketingSection = flags.isEnabled(AppFeature.coupons) ||
         flags.isEnabled(AppFeature.reportsAnalytics) ||
@@ -61,12 +63,12 @@ class Sidebar extends StatelessComponent {
           ),
 
           // Item: Products & Inventory (Active in MVP)
-          const SideMenuItem(
+          SideMenuItem(
             feature: AppFeature.productsInventory,
             title: 'المنتجات والمخزون',
             icon: 'inventory_2',
             href: '/products',
-            badgeText: '340',
+            badgeText: totalProducts > 0 ? '$totalProducts' : null,
           ),
 
           // Item: Add Product Quick Sub-link (Active in MVP)

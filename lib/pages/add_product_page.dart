@@ -1,5 +1,8 @@
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
+import 'package:jaspr_riverpod/jaspr_riverpod.dart';
+
+import '../features/inventory/presentation/providers/inventory_providers.dart';
 import '../services/firebase_service.dart';
 
 /// The Add Product Page in Jaspr for Matjar Nabdh Admin Dashboard.
@@ -144,6 +147,10 @@ class _AddProductPageState extends State<AddProductPage> {
     };
 
     final result = await FirebaseService.addProduct(productData);
+
+    if (result['success'] == true) {
+      context.read(productsNotifierProvider.notifier).refresh();
+    }
 
     setState(() {
       isLoading = false;

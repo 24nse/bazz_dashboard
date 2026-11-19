@@ -1,49 +1,23 @@
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
-import '../services/firebase_service.dart';
+import 'package:jaspr_riverpod/jaspr_riverpod.dart';
+
+import '../features/inventory/data/models/product_model.dart';
+import '../features/inventory/presentation/providers/inventory_providers.dart';
 
 /// The Products & Inventory Management Page in Jaspr for Matjar Nabdh.
-/// Supports live fetching from Firebase Firestore for project 'lipsk'.
-class ProductsPage extends StatefulComponent {
+/// Fully dynamic with Riverpod state management and live Firestore data.
+class ProductsPage extends StatelessComponent {
   const ProductsPage({super.key});
 
   @override
-  State<ProductsPage> createState() => _ProductsPageState();
-}
-
-class _ProductsPageState extends State<ProductsPage> {
-  List<Map<String, dynamic>> firebaseProducts = [];
-  bool isLoading = false;
-  String? loadError;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchFirebaseProducts();
-  }
-
-  Future<void> _fetchFirebaseProducts() async {
-    setState(() {
-      isLoading = true;
-      loadError = null;
-    });
-
-    try {
-      final items = await FirebaseService.getProducts();
-      setState(() {
-        firebaseProducts = items;
-        isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        loadError = e.toString();
-        isLoading = false;
-      });
-    }
-  }
-
-  @override
   Component build(BuildContext context) {
+    final productsAsync = context.watch(productsNotifierProvider);
+    final totalProducts = context.watch(totalProductsCountProvider);
+    final activeProducts = context.watch(activeProductsCountProvider);
+    final lowStockProducts = context.watch(lowStockProductsCountProvider);
+    final isLoading = productsAsync.isLoading;
+
     return main_(
       classes: 'flex-1 overflow-y-auto custom-scroll p-space-xl space-y-6',
       [
@@ -74,12 +48,12 @@ class _ProductsPageState extends State<ProductsPage> {
             button(
               classes:
                   'h-11 px-4 rounded-full border border-primary/30 hover:border-primary bg-primary/5 hover:bg-primary/10 text-primary font-label-md text-label-md font-bold flex items-center gap-2 transition-all cursor-pointer',
-              events: {'click': (e) => _fetchFirebaseProducts()},
+              events: {'click': (e) => context.read(productsNotifierProvider.notifier).refresh()},
               [
                 span(classes: 'material-symbols-outlined text-[18px] ${isLoading ? "animate-spin" : ""}', [
                   Component.text('sync'),
                 ]),
-                span([Component.text(isLoading ? 'جارٍ المزامنة...' : 'مزامنة مع Firebase lipsak')]),
+                span([Component.text(isLoading ? 'جارٍ المزامنة...' : 'مزامنة مع Firebase')]),
               ],
             ),
             a(
@@ -94,7 +68,7 @@ class _ProductsPageState extends State<ProductsPage> {
           ]),
         ]),
 
-        // KPI Summary Cards (4 Cards)
+        // KPI Summary Cards (4 Dynamic Cards)
         div(classes: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4', [
           // Total Products
           div(
@@ -104,13 +78,13 @@ class _ProductsPageState extends State<ProductsPage> {
               div([
                 p(classes: 'font-body-sm text-body-sm text-outline', [Component.text('إجمالي المنتجات')]),
                 h3(classes: 'font-price-lg text-price-lg text-on-surface mt-1 font-bold', [
-                  Component.text('${340 + firebaseProducts.length}'),
+                  Component.text('$totalProducts'),
                 ]),
                 span(
                   classes: 'text-[11px] text-emerald-600 font-semibold inline-flex items-center gap-0.5 mt-1',
                   [
                     span(classes: 'material-symbols-outlined text-[13px]', [Component.text('trending_up')]),
-                    Component.text('+${firebaseProducts.length} من Firebase'),
+                    Component.text('محدث لحظياً'),
                   ],
                 ),
               ]),
@@ -132,7 +106,7 @@ class _ProductsPageState extends State<ProductsPage> {
               div([
                 p(classes: 'font-body-sm text-body-sm text-outline', [Component.text('منتجات نشطة بالمتجر')]),
                 h3(classes: 'font-price-lg text-price-lg text-on-surface mt-1 font-bold', [
-                  Component.text('${312 + firebaseProducts.where((p) => p['isPublished'] == true).length}'),
+                  Component.text('$activeProducts'),
                 ]),
                 span(
                   classes: 'text-[11px] text-emerald-600 font-semibold inline-flex items-center gap-0.5 mt-1',
@@ -151,15 +125,15 @@ class _ProductsPageState extends State<ProductsPage> {
             ],
           ),
 
-          // Firebase Live Count
+          // Live Firestore Collection Count
           div(
             classes:
                 'bg-surface-container-lowest p-5 rounded-2xl border-2 border-primary/30 shadow-sm flex items-center justify-between',
             [
               div([
-                p(classes: 'font-body-sm text-body-sm text-primary font-bold', [Component.text('مستندات Firebase lipsak')]),
+                p(classes: 'font-body-sm text-body-sm text-primary font-bold', [Component.text('مستندات Firestore الحية')]),
                 h3(classes: 'font-price-lg text-price-lg text-primary mt-1 font-bold', [
-                  Component.text('${firebaseProducts.length}'),
+                  Component.text('${productsAsync.value?.length ?? 0}'),
                 ]),
                 span(
                   classes: 'text-[11px] text-emerald-600 font-semibold inline-flex items-center gap-0.5 mt-1',
@@ -185,7 +159,9 @@ class _ProductsPageState extends State<ProductsPage> {
             [
               div([
                 p(classes: 'font-body-sm text-body-sm text-outline', [Component.text('تنبيهات المخزون')]),
-                h3(classes: 'font-price-lg text-price-lg text-on-surface mt-1 font-bold', [Component.text('18')]),
+                h3(classes: 'font-price-lg text-price-lg text-on-surface mt-1 font-bold', [
+                  Component.text('$lowStockProducts'),
+                ]),
                 span(
                   classes: 'text-[11px] text-amber-600 font-semibold inline-flex items-center gap-0.5 mt-1',
                   [
@@ -234,8 +210,8 @@ class _ProductsPageState extends State<ProductsPage> {
                     option([Component.text('جميع الأقسام (الكل)')]),
                     option([Component.text('أحذية وسنيكرز')]),
                     option([Component.text('إلكترونيات وسماعات')]),
-                    option([Component.text('ملابس رياضية')]),
-                    option([Component.text('إكسسوارات وساعات')]),
+                    option([Component.text('ملابس رجالية (cat_men)')]),
+                    option([Component.text('قمصان رجالية (cat_men_shirts)')]),
                   ],
                 ),
                 span(
@@ -282,79 +258,85 @@ class _ProductsPageState extends State<ProductsPage> {
                   ]),
                 ]),
                 tbody(classes: 'divide-y divide-surface-container-high/40 font-body-md text-body-md', [
-                  // Dynamically render Firebase products first
-                  for (final fbProd in firebaseProducts)
-                    _buildProductRow(
-                      imageUrl: fbProd['imageUrl']?.toString() ??
-                          'https://lh3.googleusercontent.com/aida-public/AB6AXuDWnaA1xderq1MlEPMwI9HNmHkmJW71LkSgseqGGboAEwdE-_wFaxzVPNtGUB0QMWakdritPZ4b9eKQqA1cCr74EHpJmdNws0zBmoOP8nW7v-5yulYG5WO_LunNrqSZYW8FOA45E2nfPjXvtp4eggUysjR5AmC2AJUMRmNjFdl5wv_4GZqk7a1pVxaDuTbhNcIbELLqAnTcIhTqzGQxdkAbjd6r0egLM0bN_8IgjpT_3c_BkTYczcaY',
-                      title: fbProd['nameAr']?.toString().isNotEmpty == true
-                          ? fbProd['nameAr'].toString()
-                          : (fbProd['nameEn']?.toString() ?? 'منتج بدون اسم'),
-                      sku: fbProd['sku']?.toString() ?? 'N/A',
-                      brand: fbProd['brand']?.toString() ?? 'متجر نبض',
-                      category: fbProd['category']?.toString() ?? 'عام',
-                      price: '${fbProd['discountPrice'] ?? fbProd['price'] ?? 0} ر.س',
-                      oldPrice: (fbProd['discountPrice'] != null && fbProd['discountPrice'] != fbProd['price'])
-                          ? '${fbProd['price']} ر.س'
-                          : null,
-                      stockLabel: 'متوفر (${fbProd['stock'] ?? 0} قطعة)',
-                      stockColor: (fbProd['stock'] is num && (fbProd['stock'] as num) > 10) ? 'emerald' : 'amber',
-                      stockPercent: 90,
-                      sales: 'Firebase Live (lipsak)',
-                      isPublished: fbProd['isPublished'] == true,
-                      isFromFirebase: true,
-                    ),
-
-                  // Default Catalog Row 1
-                  _buildProductRow(
-                    imageUrl:
-                        'https://lh3.googleusercontent.com/aida-public/AB6AXuDWnaA1xderq1MlEPMwI9HNmHkmJW71LkSgseqGGboAEwdE-_wFaxzVPNtGUB0QMWakdritPZ4b9eKQqA1cCr74EHpJmdNws0zBmoOP8nW7v-5yulYG5WO_LunNrqSZYW8FOA45E2nfPjXvtp4eggUysjR5AmC2AJUMRmNjFdl5wv_4GZqk7a1pVxaDuTbhNcIbELLqAnTcIhTqzGQxdkAbjd6r0egLM0bN_8IgjpT_3c_BkTYczcaY',
-                    title: 'حذاء نايكي إير ماكس بلس 2025',
-                    sku: 'NKE-AMX-2025',
-                    brand: 'Nike',
-                    category: 'أحذية وسنيكرز',
-                    price: '479 ر.س',
-                    oldPrice: '549 ر.س',
-                    stockLabel: 'متوفر (184 قطعة)',
-                    stockColor: 'emerald',
-                    stockPercent: 78,
-                    sales: '1,420 طلب',
-                    isPublished: true,
-                  ),
-
-                  // Row 2
-                  _buildProductRow(
-                    imageUrl:
-                        'https://lh3.googleusercontent.com/aida-public/AB6AXuC5CMnDlEAQrBv-yXbVZvmdpiZxUrRZUmAbjbejN9sQTGc1iVexleJsCtQ1EMJQ39KEK37zVu7E1ieYKy9nnRD4ckY3lNIJ0flUoMxRGZ0Mzu2Y9gC4moex69NTMOb2jGxmvi8XlW-eNjtcjFgCP5LLqS8YLa5P7hLf3tGE0I6BhbrXfaTMS9LUOv5jXQGwEZ7fGtArbsYUZd2n9UQlPZ2hkzC5lROx24SaNNh1A94o185rdLdC8UlW',
-                    title: 'سماعة سوني اللاسلكية WH-1000XM5',
-                    sku: 'SNY-XM5-BLK',
-                    brand: 'Sony',
-                    category: 'إلكترونيات وسماعات',
-                    price: '1,199 ر.س',
-                    oldPrice: '1,399 ر.س',
-                    stockLabel: 'منخفض (6 قطع فقط)',
-                    stockColor: 'amber',
-                    stockPercent: 15,
-                    sales: '850 طلب',
-                    isPublished: true,
-                  ),
-
-                  // Row 3
-                  _buildProductRow(
-                    imageUrl:
-                        'https://lh3.googleusercontent.com/aida-public/AB6AXuBSFyeMkoRDE-ByDpjFQYysy-9itHRu7IH99GSvuL1nRJVSzOsh0-GoCK6F_iOJ5zrXbjAFQONgrDqoDjRRlrVyZv6nCT1AnMQ9bCHDg2mPeE_b9h2abQaqr7Q92jcq8MDangw95cmmWklbCitGIJS2qyrPUqFmNPiwgON72086LBoYveOy-PKGLD7_fMc8uWx3C1wgxjmg8JcdbpuhFeiowyvSpDSuMfp4Cs185CXiJeaCzFwalQr6',
-                    title: 'ساعة آبل الذكية الجيل التاسع GPS',
-                    sku: 'APL-W9-45MM',
-                    brand: 'Apple',
-                    category: 'إكسسوارات وساعات',
-                    price: '1,799 ر.س',
-                    oldPrice: null,
-                    stockLabel: 'نفذت الكمية (0)',
-                    stockColor: 'red',
-                    stockPercent: 0,
-                    sales: '2,105 طلب',
-                    isPublished: false,
-                  ),
+                  // Loading state
+                  if (productsAsync.isLoading && (productsAsync.value == null || productsAsync.value!.isEmpty))
+                    tr([
+                      td(
+                        classes: 'py-16 text-center text-outline',
+                        attributes: {'colspan': '8'},
+                        [
+                          div(classes: 'flex flex-col items-center justify-center gap-2', [
+                            span(classes: 'material-symbols-outlined text-3xl text-primary animate-spin', [
+                              Component.text('sync'),
+                            ]),
+                            p(classes: 'font-label-md text-label-md text-on-surface font-semibold', [
+                              Component.text('جارٍ تحميل بيانات المنتجات من Firestore...'),
+                            ]),
+                          ]),
+                        ],
+                      ),
+                    ])
+                  // Error state
+                  else if (productsAsync.hasError)
+                    tr([
+                      td(
+                        classes: 'py-12 text-center text-error',
+                        attributes: {'colspan': '8'},
+                        [
+                          div(classes: 'flex flex-col items-center justify-center gap-2', [
+                            span(classes: 'material-symbols-outlined text-3xl', [Component.text('error')]),
+                            p(classes: 'font-bold text-on-surface', [
+                              Component.text('تعذر جلب المنتجات من قاعدة البيانات'),
+                            ]),
+                            p(classes: 'text-xs text-outline max-w-md', [
+                              Component.text('${productsAsync.error}'),
+                            ]),
+                            button(
+                              classes:
+                                  'mt-2 px-4 py-1.5 rounded-full bg-primary text-on-primary text-xs font-bold cursor-pointer hover:bg-primary-container transition-all',
+                              events: {'click': (e) => context.read(productsNotifierProvider.notifier).refresh()},
+                              [Component.text('إعادة المحاولة')],
+                            ),
+                          ]),
+                        ],
+                      ),
+                    ])
+                  // Empty state
+                  else if (productsAsync.value == null || productsAsync.value!.isEmpty)
+                    tr([
+                      td(
+                        classes: 'py-16 text-center text-outline',
+                        attributes: {'colspan': '8'},
+                        [
+                          div(classes: 'flex flex-col items-center justify-center gap-3', [
+                            div(classes: 'w-14 h-14 rounded-2xl bg-surface-container flex items-center justify-center text-outline', [
+                              span(classes: 'material-symbols-outlined text-3xl', [Component.text('inventory_2')]),
+                            ]),
+                            div([
+                              p(classes: 'font-bold text-on-surface text-base', [
+                                Component.text('لا توجد منتجات مسجلة في Firestore بعد'),
+                              ]),
+                              p(classes: 'text-xs text-outline mt-1', [
+                                Component.text('ابدأ بإضافة أول منتج لمتجر نبض ليتمكن العميل من بدء العمل.'),
+                              ]),
+                            ]),
+                            a(
+                              classes:
+                                  'mt-1 px-5 py-2 rounded-full bg-primary hover:bg-primary-container text-on-primary text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all',
+                              href: '/add-product',
+                              [
+                                span(classes: 'material-symbols-outlined text-base', [Component.text('add')]),
+                                Component.text('إضافة أول منتج الآن'),
+                              ],
+                            ),
+                          ]),
+                        ],
+                      ),
+                    ])
+                  // Live Dynamic Products (Static mock items completely eliminated)
+                  else
+                    for (final product in productsAsync.value!)
+                      _buildProductRow(product),
                 ]),
               ]),
             ]),
@@ -364,21 +346,19 @@ class _ProductsPageState extends State<ProductsPage> {
     );
   }
 
-  static Component _buildProductRow({
-    required String imageUrl,
-    required String title,
-    required String sku,
-    required String brand,
-    required String category,
-    required String price,
-    String? oldPrice,
-    required String stockLabel,
-    required String stockColor,
-    required int stockPercent,
-    required String sales,
-    required bool isPublished,
-    bool isFromFirebase = false,
-  }) {
+  static Component _buildProductRow(ProductModel product) {
+    final stockLabel = product.isOutOfStock
+        ? 'نفذت الكمية (0)'
+        : (product.isLowStock
+            ? 'منخفض (${product.stock} قطع فقط)'
+            : 'متوفر (${product.stock} قطعة)');
+
+    final stockColor = product.isOutOfStock
+        ? 'red'
+        : (product.isLowStock ? 'amber' : 'emerald');
+
+    final stockPercent = product.isOutOfStock ? 0 : (product.isLowStock ? 20 : 85);
+
     final colorClasses = switch (stockColor) {
       'emerald' => ('bg-emerald-500', 'text-emerald-700'),
       'amber' => ('bg-secondary-container', 'text-secondary'),
@@ -393,37 +373,40 @@ class _ProductsPageState extends State<ProductsPage> {
         div(classes: 'flex items-center gap-3', [
           img(
             classes: 'w-12 h-12 rounded-xl object-cover bg-surface-container border border-surface-container-high shrink-0',
-            src: imageUrl,
-            alt: title,
+            src: product.imageUrl,
+            alt: product.displayName,
           ),
           div([
             div(classes: 'flex items-center gap-2', [
               a(classes: 'font-bold text-on-surface hover:text-primary transition-colors', href: '/add-product', [
-                Component.text(title),
+                Component.text(product.displayName),
               ]),
-              if (isFromFirebase)
-                span(classes: 'bg-primary-fixed text-primary text-[10px] font-bold px-1.5 py-0.5 rounded-full', [
-                  Component.text('Firebase lipsk'),
-                ]),
+              span(classes: 'bg-primary-fixed text-primary text-[10px] font-bold px-1.5 py-0.5 rounded-full', [
+                Component.text('Firestore Live'),
+              ]),
             ]),
             div(classes: 'flex items-center gap-2 mt-0.5', [
               span(classes: 'text-[11px] font-mono bg-surface-container px-1.5 py-0.5 rounded text-outline', [
-                Component.text('SKU: $sku'),
+                Component.text('SKU: ${product.sku}'),
               ]),
-              span(classes: 'text-[11px] text-outline', [Component.text('الماركة: $brand')]),
+              span(classes: 'text-[11px] text-outline', [Component.text('الماركة: ${product.brand}')]),
             ]),
           ]),
         ]),
       ]),
       td(classes: 'py-4 px-4', [
         span(classes: 'bg-surface-container text-on-surface px-2.5 py-1 rounded-full text-xs font-medium', [
-          Component.text(category),
+          Component.text(product.category),
         ]),
       ]),
       td(classes: 'py-4 px-4', [
-        div(classes: 'font-price-sm text-price-sm text-on-surface font-bold', [Component.text(price)]),
-        if (oldPrice != null)
-          div(classes: 'text-[11px] text-outline line-through', [Component.text(oldPrice)]),
+        div(classes: 'font-price-sm text-price-sm text-on-surface font-bold', [
+          Component.text('${product.effectivePrice} ر.س'),
+        ]),
+        if (product.discountPrice != null && product.discountPrice != product.price)
+          div(classes: 'text-[11px] text-outline line-through', [
+            Component.text('${product.price} ر.س'),
+          ]),
       ]),
       td(classes: 'py-4 px-4', [
         div(classes: 'flex items-center gap-1.5', [
@@ -435,17 +418,14 @@ class _ProductsPageState extends State<ProductsPage> {
         ]),
       ]),
       td(classes: 'py-4 px-4 font-semibold text-on-surface', [
-        if (isFromFirebase)
-          span(classes: 'text-xs text-primary font-bold flex items-center gap-1', [
-            span(classes: 'material-symbols-outlined text-[14px]', [Component.text('cloud_done')]),
-            Component.text('Firestore Live'),
-          ])
-        else
-          Component.text(sales),
+        span(classes: 'text-xs text-primary font-bold flex items-center gap-1', [
+          span(classes: 'material-symbols-outlined text-[14px]', [Component.text('cloud_done')]),
+          Component.text(product.sales ?? 'Firestore Live'),
+        ]),
       ]),
       td(classes: 'py-4 px-4 text-center', [
         label(classes: 'relative inline-flex items-center cursor-pointer', [
-          input(classes: 'sr-only peer', type: InputType.checkbox, checked: isPublished),
+          input(classes: 'sr-only peer', type: InputType.checkbox, checked: product.isPublished),
           div(
             classes:
                 'w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[\'\'] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary',
